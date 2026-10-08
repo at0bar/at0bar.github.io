@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Оборона Королевского города — план</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Russo+One&family=PT+Sans:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  --bg:#e7e9e4; --panel:#f6f7f3; --ink:#1d2320; --muted:#5c665f; --line:#c8ccc3;
+  --mud:#b97b56; --mud-dark:#7b4e33; --stone:#8a8f8c; --green:#cfe0c3;
+  --us:#1f6f8b; --us-soft:#d3e7ee; --foe:#b3261e; --foe-soft:#f5d9d6; --gold:#b7791f;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#171b1a; --panel:#202624; --ink:#e6ebe7; --muted:#9aa59e; --line:#36403c;
+    --mud:#8e5c3f; --mud-dark:#5a3826; --stone:#6c7370; --green:#24331f;
+    --us:#58b4d1; --us-soft:#173540; --foe:#ef6b61; --foe-soft:#3d1c1a; --gold:#e0a54a;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#171b1a; --panel:#202624; --ink:#e6ebe7; --muted:#9aa59e; --line:#36403c;
+  --mud:#8e5c3f; --mud-dark:#5a3826; --stone:#6c7370; --green:#24331f;
+  --us:#58b4d1; --us-soft:#173540; --foe:#ef6b61; --foe-soft:#3d1c1a; --gold:#e0a54a;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.55 "PT Sans",system-ui,sans-serif}
+main{max-width:1180px;margin:0 auto;padding:28px 18px 60px}
+h1,h2,h3{font-family:"Russo One","PT Sans",system-ui,sans-serif;font-weight:400;line-height:1.15;margin:0}
+h1{font-size:clamp(28px,4.5vw,46px)}
+h2{font-size:24px;margin:44px 0 14px}
+h3{font-size:18px;margin-bottom:6px}
+p{max-width:74ch;margin:0 0 12px}
+.lead{color:var(--muted);font-size:18px;margin-top:10px}
+.note{font-size:15px;color:var(--muted);max-width:80ch}
+.goal{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;margin-top:22px}
+.goal div{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.goal b{font-family:"Russo One",sans-serif;font-size:26px;color:var(--us);display:block}
+
+.mapwrap{display:grid;grid-template-columns:minmax(0,1fr) 310px;gap:20px;margin-top:20px}
+@media (max-width:900px){.mapwrap{grid-template-columns:1fr}}
+.map{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:10px;overflow-x:auto}
+.map svg{display:block;width:100%;min-width:560px;height:auto}
+.side{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px}
+#info{min-height:150px}
+#info .who{font-family:"Russo One",sans-serif;font-size:22px}
+.legend{font-size:14px;color:var(--muted);margin-top:14px;display:grid;gap:6px;border-top:1px solid var(--line);padding-top:12px}
+.legend i{display:inline-block;width:14px;height:14px;border-radius:50%;vertical-align:-2px;margin-right:6px}
+.alli{cursor:pointer}
+.alli:hover circle,.alli:focus circle{stroke-width:4}
+.alli:focus{outline:none}
+
+.table-wrap{overflow-x:auto;background:var(--panel);border:1px solid var(--line);border-radius:14px}
+table{border-collapse:collapse;width:100%;min-width:520px;font-size:16px}
+th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--muted);font-size:14px}
+tr:last-child td{border-bottom:0}
+td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+
+.roles{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px}
+.role{background:var(--panel);border:1px solid var(--line);border-left:6px solid var(--us);border-radius:10px;padding:14px 16px}
+.role.core{border-left-color:var(--gold)}
+.role.weak{border-left-color:var(--muted)}
+.role p{margin:6px 0 0}
+.role small{color:var(--muted)}
+
+.phases{display:grid;gap:12px;counter-reset:ph}
+.phase{display:grid;grid-template-columns:56px 1fr;gap:14px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.phase::before{counter-increment:ph;content:counter(ph);font-family:"Russo One",sans-serif;font-size:34px;color:var(--us);line-height:1}
+.phase p{margin:4px 0 0}
+.rules{columns:2 300px;column-gap:28px;padding-left:20px}
+.rules li{break-inside:avoid;margin-bottom:8px}
+.check{background:var(--foe-soft);border:1px solid var(--foe);border-radius:12px;padding:14px 18px}
+.check ul{margin:8px 0 0;padding-left:20px}
+.topbtns{position:fixed;right:14px;top:calc(env(safe-area-inset-top,0px) + 12px);display:flex;gap:8px;z-index:5}
+button.theme{border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:999px;padding:6px 12px;font:inherit;font-size:14px;cursor:pointer;z-index:5}
+:focus-visible{outline:3px solid var(--us);outline-offset:2px}
+</style>
+</head>
+<body>
+<div class="topbtns"><button class="theme" id="langBtn" type="button" aria-label="Switch to English">EN</button><button class="theme" id="themeBtn" type="button" data-i18n="theme">Тема</button></div>
+<main>
+  <h1 data-i18n="h1">Оборона Королевского города</h1>
+  <p class="lead" data-i18n="lead">Шаблон расстановки и правила обороны, которые работают при любом подходе противника. Окончательно главные башни выбираем после того, как враг зайдёт в королевство и встанет.</p>
+
+  <div class="goal" data-i18n="goal">
+    <div><b>4 часа</b>не дать противнику набрать 100% — тогда побеждаем мы</div>
+    <div><b>Или раньше</b>наша шкала дошла до 100% — досрочная победа</div>
+    <div><b>Город</b>пока он у нас, их шкала стоит, а наша растёт</div>
+    <div><b>Башни</b>замедляют их прогресс и выбивают их гарнизон в городе</div>
+  </div>
+
+  <h2 data-i18n="h2_1">Шаблон расстановки</h2>
+  <p data-i18n="pTpl">Пример: главные силы противника встали с юга. Тогда дальние от них башни W и N — главные, их держим насмерть. Ближние S и E — второстепенные: держим, пока это дёшево, и отбиваем контр-ралли. Если враг встанет с другой стороны, схема поворачивается целиком.</p>
+
+  <div class="mapwrap">
+    <div class="map">
+      <svg viewBox="0 0 760 620" role="img" aria-label="Шаблон расстановки обороны вокруг Королевского города">
+        <defs>
+          <marker id="aU" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--us)"/></marker>
+          <marker id="aF" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--foe)"/></marker>
+          <pattern id="tex" width="18" height="18" patternUnits="userSpaceOnUse"><circle cx="4" cy="5" r="1.4" fill="#000" opacity=".07"/><circle cx="13" cy="13" r="1" fill="#000" opacity=".07"/></pattern>
+        </defs>
+        <rect x="0" y="0" width="760" height="620" rx="10" fill="var(--green)"/>
+        <text x="16" y="26" font-family="PT Sans" font-size="13" fill="var(--muted)" data-i18n="svGreen">зелёнка — под щитами</text>
+
+        <rect x="118" y="88" width="524" height="400" rx="6" fill="var(--mud)"/>
+        <rect x="118" y="88" width="524" height="400" rx="6" fill="url(#tex)"/>
+        <rect x="118" y="88" width="524" height="400" rx="6" fill="none" stroke="var(--ink)" stroke-width="2"/>
+        <text x="128" y="108" font-size="13" fill="#fff" opacity=".85" font-family="PT Sans" data-i18n="svMud">грязь — без щитов, только те, кто держит удар</text>
+
+        <!-- enemy example -->
+        <rect x="150" y="530" width="460" height="70" rx="18" fill="var(--foe-soft)" stroke="var(--foe)" stroke-width="2" stroke-dasharray="6 5"/>
+        <text x="380" y="562" text-anchor="middle" font-family="Russo One" font-size="17" fill="var(--foe)" data-i18n="svFoe">ПРОТИВНИК (пример)</text>
+        <text x="380" y="583" text-anchor="middle" font-family="PT Sans" font-size="13" fill="var(--muted)" data-i18n="svFoe2">где встанет — узнаем после их захода</text>
+        <g stroke="var(--foe)" stroke-width="2.5" fill="none" opacity=".7">
+          <path d="M300 530 L300 395" marker-end="url(#aF)"/>
+          <path d="M460 530 L460 395" marker-end="url(#aF)"/>
+        </g>
+
+        <!-- inner zone -->
+        <rect x="300" y="233" width="160" height="110" rx="4" fill="var(--mud-dark)"/>
+        <rect x="357" y="266" width="46" height="44" rx="3" fill="var(--stone)" stroke="var(--gold)" stroke-width="3"/>
+        <text x="380" y="294" text-anchor="middle" font-family="Russo One" font-size="18" fill="#fff">C</text>
+        <g font-family="Russo One" font-size="13" text-anchor="middle">
+          <rect x="299" y="232" width="26" height="26" rx="3" fill="var(--us)"/><text x="312" y="250" fill="#fff">W</text>
+          <rect x="435" y="232" width="26" height="26" rx="3" fill="var(--us)"/><text x="448" y="250" fill="#fff">N</text>
+          <rect x="299" y="318" width="26" height="26" rx="3" fill="var(--stone)"/><text x="312" y="336" fill="#fff">S</text>
+          <rect x="435" y="318" width="26" height="26" rx="3" fill="var(--stone)"/><text x="448" y="336" fill="#fff">E</text>
+        </g>
+        <g font-family="PT Sans" font-size="11" fill="#fff" text-anchor="middle">
+          <text x="312" y="226" data-i18n="svMain">главная</text><text x="448" y="226" data-i18n="svMain">главная</text>
+          <text x="312" y="358" data-i18n="svSec">второст.</text><text x="448" y="358" data-i18n="svSec">второст.</text>
+        </g>
+
+        <!-- our alliances -->
+        <g font-family="Russo One" text-anchor="middle">
+          <g class="alli" tabindex="0" data-id="IRON"><circle cx="380" cy="190" r="25" fill="var(--gold)" stroke="var(--panel)" stroke-width="2"/><text x="380" y="195" font-size="12" fill="#fff">IRON</text></g>
+          <g class="alli" tabindex="0" data-id="REG"><circle cx="380" cy="400" r="27" fill="var(--us)" stroke="var(--panel)" stroke-width="2"/><text x="380" y="405" font-size="13" fill="#fff">REG</text></g>
+          <g class="alli" tabindex="0" data-id="GOD"><circle cx="245" cy="190" r="24" fill="var(--us)" stroke="var(--panel)" stroke-width="2"/><text x="245" y="195" font-size="12" fill="#fff">GOD</text></g>
+          <g class="alli" tabindex="0" data-id="SWA"><circle cx="515" cy="190" r="24" fill="var(--us)" stroke="var(--panel)" stroke-width="2"/><text x="515" y="195" font-size="12" fill="#fff">SWA</text></g>
+          <g class="alli" tabindex="0" data-id="POH"><circle cx="240" cy="380" r="19" fill="var(--us)" stroke="var(--panel)" stroke-width="2"/><text x="240" y="384" font-size="11" fill="#fff">POH</text></g>
+          <g class="alli" tabindex="0" data-id="KTK"><circle cx="520" cy="380" r="18" fill="var(--us)" stroke="var(--panel)" stroke-width="2"/><text x="520" y="384" font-size="11" fill="#fff">KTK</text></g>
+          <!-- green support -->
+          <g class="alli" tabindex="0" data-id="SHN"><circle cx="60" cy="150" r="16" fill="var(--us-soft)" stroke="var(--us)" stroke-width="2"/><text x="60" y="154" font-size="10" fill="var(--us)">SHN</text></g>
+          <g class="alli" tabindex="0" data-id="RPL"><circle cx="700" cy="150" r="16" fill="var(--us-soft)" stroke="var(--us)" stroke-width="2"/><text x="700" y="154" font-size="10" fill="var(--us)">RPL</text></g>
+          <g class="alli" tabindex="0" data-id="PHNX"><circle cx="60" cy="380" r="16" fill="var(--us-soft)" stroke="var(--us)" stroke-width="2"/><text x="60" y="384" font-size="9" fill="var(--us)">PHNX</text></g>
+          <g class="alli" tabindex="0" data-id="Asp"><circle cx="700" cy="380" r="16" fill="var(--us-soft)" stroke="var(--us)" stroke-width="2"/><text x="700" y="384" font-size="10" fill="var(--us)">Asp</text></g>
+          <g class="alli" tabindex="0" data-id="T7"><circle cx="380" cy="40" r="20" fill="var(--us-soft)" stroke="var(--us)" stroke-width="2" stroke-dasharray="4 3"/><text x="380" y="44" font-size="11" fill="var(--us)">т7</text></g>
+        </g>
+
+        <!-- our arrows -->
+        <g stroke="var(--us)" stroke-width="2.5" fill="none">
+          <path d="M380 215 L380 262" marker-end="url(#aU)"/>
+          <path d="M262 207 L297 236" marker-end="url(#aU)"/>
+          <path d="M498 207 L463 236" marker-end="url(#aU)"/>
+          <path d="M256 368 L296 340" marker-end="url(#aU)"/>
+          <path d="M504 368 L464 340" marker-end="url(#aU)"/>
+          <!-- REG counter-rallies -->
+          <path d="M356 388 Q330 370 326 348" marker-end="url(#aU)" stroke-dasharray="5 4"/>
+          <path d="M404 388 Q430 370 434 348" marker-end="url(#aU)" stroke-dasharray="5 4"/>
+          <path d="M380 373 L380 314" marker-end="url(#aU)" stroke-dasharray="5 4"/>
+        </g>
+        <g stroke="var(--us)" stroke-width="1.8" fill="none" stroke-dasharray="2 4">
+          <path d="M76 152 Q200 160 290 238" marker-end="url(#aU)"/>
+          <path d="M684 152 Q560 160 470 238" marker-end="url(#aU)"/>
+          <path d="M76 380 Q190 370 296 334" marker-end="url(#aU)"/>
+          <path d="M684 380 Q570 370 464 334" marker-end="url(#aU)"/>
+          <path d="M380 60 L380 160" marker-end="url(#aU)"/>
+        </g>
+      </svg>
+    </div>
+
+    <aside class="side">
+      <div id="info" aria-live="polite" data-i18n="info">
+        <div class="who">Нажми на альянс</div>
+        <p class="note">Покажу его роль в обороне.</p>
+      </div>
+      <div class="legend" data-i18n="legend">
+        <div><i style="background:var(--gold)"></i>гарнизон города</div>
+        <div><i style="background:var(--us)"></i>держит башню или бьёт контр-ралли, стоит на грязи</div>
+        <div><i style="background:var(--us-soft);border:2px solid var(--us)"></i>сидит на зелёнке под щитом, доливает гарнизоны</div>
+        <div>Сплошная стрелка — захват и удержание, штрих — контр-ралли REG, точки — подкрепления из-под щита.</div>
+      </div>
+    </aside>
+  </div>
+
+  <h2 data-i18n="h2_2">Роли альянсов</h2>
+  <div class="roles" data-i18n="roles">
+    <div class="role core"><h3>IRON — город</h3><small>гарнизон главной цели</small><p>Город на старте захватывает игрок 30 ур.: по данным вики потолок гарнизона равен ёмкости ралли захватившего. 32 т8 IRON держат и ротируют гарнизон, т9 REG доливают его при штурме.</p></div>
+    <div class="role"><h3>REG — ударный кулак</h3><small>мобильный резерв</small><p>Стоит на грязи со стороны противника, ближе всех к центру. Не сидит в башне: бьёт контр-ралли на город и второстепенные башни сразу после выстрела наших башен. Часть сил всегда держит на последний час.</p></div>
+    <div class="role"><h3>GOD — главная башня W</h3><small>держим насмерть</small><p>Лучший ралли-лидер GOD берёт башню первым. Гарнизон не должен пустеть ни на секунду, SHN и т7 доливают его из-под щитов.</p></div>
+    <div class="role"><h3>SWA — главная башня N</h3><small>держим насмерть</small><p>28 т8 держат гарнизон массой и ротацией. RPL и т7 доливают из-под щитов.</p></div>
+    <div class="role weak"><h3>POH и KTK — башни S и E</h3><small>второстепенные</small><p>Берут на старте, пока противник не подошёл. Держат, пока это дёшево. Когда башня падает — не сливают войска, а отходят и ждут контр-ралли REG.</p></div>
+    <div class="role weak"><h3>Слабые и все т7</h3><small>зелёнка под щитами</small><p>Длинный щит ставится до старта. Доливают гарнизоны после каждого выстрела вражеских башен: потери гарнизона нужно восполнять сразу.</p></div>
+  </div>
+
+  <h2 data-i18n="h2_3">Как выбрать главные башни</h2>
+  <p data-i18n="pPick">Атакующие заходят в королевство до начала обороны, так что их расстановку мы увидим заранее. Правило простое: главные — две башни, до которых сильнейшим альянсам противника дальше всего маршировать. Там их волны приходят реже, а наши подкрепления — быстрее. Две башни, ближайшие к их главным силам, — второстепенные: их они всё равно будут штурмовать, и пусть тратят на это войска и время.</p>
+
+  <h2 data-i18n="h2_4">Сколько времени нужно отнять</h2>
+  <p data-i18n="pProg">Прогресс копится у каждой стороны и не сбрасывается. Значит, считается суммарное время, которое противник просидел в городе. Прикидка по вики: 2 часа удержания без башен, каждая башня даёт +25% к скорости.</p>
+  <div class="table-wrap" data-i18n="tbl">
+    <table>
+      <thead><tr><th>Башен у противника</th><th>Им нужно сидеть в городе</th><th>Нам нужно отнять из 240 мин</th></tr></thead>
+      <tbody>
+        <tr><td>0</td><td class="num">120 мин</td><td class="num">больше 120 мин</td></tr>
+        <tr><td>1</td><td class="num">96 мин</td><td class="num">больше 144 мин</td></tr>
+        <tr><td>2</td><td class="num">80 мин</td><td class="num">больше 160 мин</td></tr>
+        <tr><td>3</td><td class="num">69 мин</td><td class="num">больше 171 мин</td></tr>
+        <tr><td>4</td><td class="num">60 мин</td><td class="num">больше 180 мин</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note" data-i18n="pCoef">Коэффициенты в игре могут отличаться, но вывод не меняется: каждая удержанная нами башня покупает время.</p>
+  <p data-i18n="pOurs">Таблица работает и в нашу сторону. Наша шкала растёт, пока город наш, и при 100% мы побеждаем досрочно. Если взять город и все четыре башни на старте и удержать их, по прикидке хватит часа. С двумя башнями — около 80 минут. Поэтому первый час — не разминка, а лучший шанс закончить бой.</p>
+
+  <h2 data-i18n="h2_5">Ход боя</h2>
+  <div class="phases" data-i18n="phases">
+    <div class="phase"><div><h3>До боя</h3><p>Все, кто стоит на зелёнке, ставят длинные щиты заранее: разведка и подкрепления блокируют новые щиты на 15 минут. На грязи щита нет, поэтому сильные игроки заходят туда как можно позже, но раньше противника, чтобы занять места у своих башен: так враг вынужден стоять дальше, и его марши дольше. Разведка всей расстановки противника, выбор главных башен.</p></div></div>
+    <div class="phase"><div><h3>Старт: гонка за город</h3><p>Город и башни на старте нейтральны — кто первый, тот и держит. Игрок IRON 30 ур. заранее стоит ближе всех к городу и отправляет ралли в первую секунду. Запасной захватчик — ралли REG: если противник успел первым, REG бьёт сразу, пока их гарнизон не залит. Башни одновременно берут лучшие ралли-лидеры GOD, SWA, POH и KTK, остальные сразу доливают гарнизоны.</p></div></div>
+    <div class="phase"><div><h3>Первый час: рывок к досрочной победе</h3><p>Если на старте у нас город и три-четыре башни, наша шкала бежит почти вдвое быстрее. Пока противник разворачивается, держим всё и не отдаём даже второстепенные башни без боя: каждая из них ускоряет нас.</p></div></div>
+    <div class="phase"><div><h3>Удержание</h3><p>Главные башни и город держим постоянно. Второстепенные — пока дёшево. Каждый выстрел вражеской башни по городу — сигнал доливать гарнизон.</p></div></div>
+    <div class="phase"><div><h3>Если город пал</h3><p>Их шкала пошла — каждая минута на счету. Наши башни прореживают их гарнизон, и сразу после выстрела REG бьёт контр-ралли, а IRON доливает. Даже 5–10 минут нашего владения — это минуты, вычтенные из их прогресса.</p></div></div>
+    <div class="phase"><div><h3>Последний час</h3><p>Сильный противник к концу выдыхается. У REG и SWA должны остаться свежие войска и ускорения лечения. Если их шкала близка к 100%, всё, что есть, идёт на город.</p></div></div>
+  </div>
+
+  <h2 data-i18n="h2_6">Правила на бой</h2>
+  <ul class="rules" data-i18n="rules">
+    <li>Цель — время, а не убийства. Очки за убийства не стоят потерянной башни.</li>
+    <li>Один ответственный за каждый объект в чате: командует доливкой и отходом.</li>
+    <li>Контр-ралли — только после выстрела наших башен, не вслепую.</li>
+    <li>Атакующие на грязи стоят без щитов. Тех, кто ударил по нашим объектам, можно выбивать отдельными т8 — но только если это не мешает удержанию.</li>
+    <li>Проверить лазареты у ключевых игроков: всё, что не влезает, гибнет насовсем.</li>
+    <li>Ускорения лечения не тратить в первый час без необходимости.</li>
+  </ul>
+</main>
+<script>
+const R={
+  IRON:"Гарнизон города. Игрок 30 ур. берёт город первым, чтобы потолок гарнизона был максимальным. 32 т8 ротируют гарнизон.",
+  REG:"Ударный кулак и мобильный резерв. Контр-ралли на город и второстепенные башни сразу после выстрела наших башен. Т9 доливают гарнизон города при штурме.",
+  GOD:"Главная башня W. Держит насмерть, гарнизон не пустеет ни на секунду.",
+  SWA:"Главная башня N. 28 т8 держат массой и ротацией.",
+  POH:"Второстепенная башня S. Берёт на старте, держит пока дёшево, при падении отходит и ждёт контр-ралли REG.",
+  KTK:"Второстепенная башня E. Берёт на старте, держит пока дёшево, при падении отходит и ждёт контр-ралли REG.",
+  SHN:"Под щитом на зелёнке. Доливает гарнизон главной башни W.",
+  RPL:"Под щитом на зелёнке. Доливает гарнизон главной башни N.",
+  PHNX:"Под щитом на зелёнке. Доливает башню S, пока она наша, иначе — город.",
+  Asp:"Под щитом на зелёнке. Доливает башню E, пока она наша, иначе — город.",
+  T7:"Все т7 всех альянсов: под длинными щитами на зелёнке, у своего сектора. Доливают гарнизоны после каждого выстрела вражеских башен."
+};
+const REN={"IRON": "City garrison. The level-30 player takes the City first so the garrison cap is as high as possible. 32 T8 rotate the garrison.", "REG": "Strike fist and mobile reserve. Counter-rallies on the City and secondary towers right after our towers fire. T9s top up the City garrison during an assault.", "GOD": "Main tower W. Holds to the death, the garrison is never empty, not even for a second.", "SWA": "Main tower N. 28 T8 hold it by numbers and rotation.", "POH": "Secondary tower S. Takes it at the start, holds while it is cheap, pulls back when it falls and waits for REG's counter-rally.", "KTK": "Secondary tower E. Takes it at the start, holds while it is cheap, pulls back when it falls and waits for REG's counter-rally.", "SHN": "Under a shield in the green zone. Tops up the garrison of main tower W.", "RPL": "Under a shield in the green zone. Tops up the garrison of main tower N.", "PHNX": "Under a shield in the green zone. Tops up tower S while it is ours, otherwise the City.", "Asp": "Under a shield in the green zone. Tops up tower E while it is ours, otherwise the City.", "T7": "All T7 of all alliances: under long shields in the green zone, by their own sector. They top up garrisons after every shot from enemy towers."};
+let lang="ru",cur=null;
+const info=document.getElementById("info");
+function show(id){cur=id;const t=lang==="en"?REN[id]:R[id];info.innerHTML=`<div class="who">${id==="T7"&&lang==="en"?"T7":id}</div><p>${t}</p>`}
+document.querySelectorAll(".alli").forEach(g=>{
+  g.addEventListener("click",()=>show(g.dataset.id));
+  g.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();show(g.dataset.id)}});
+});
+const EN={"theme": "Theme", "h1": "Royal City Defense", "lead": "A deployment template and defense rules that work no matter where the enemy comes from. We pick the main towers for good once the enemy enters the kingdom and takes position.", "goal": "<div><b>4 hours</b>keep the enemy from reaching 100% — then we win</div>\n    <div><b>Or sooner</b>our bar reaches 100% — early victory</div>\n    <div><b>The City</b>while it is ours, their bar stands still and ours grows</div>\n    <div><b>Towers</b>slow their progress and wipe out their garrison in the City</div>", "svGreen": "green zone — under shields", "svMud": "mud — no shields, only those who can take a hit", "svFoe": "ENEMY (example)", "svFoe2": "we learn where after they arrive", "svMain": "main", "svSec": "second.", "info": "<div class=\"who\">Tap an alliance</div>\n        <p class=\"note\">I will show its role in the defense.</p>", "legend": "<div><i style=\"background:var(--gold)\"></i>City garrison</div>\n        <div><i style=\"background:var(--us)\"></i>holds a tower or runs counter-rallies, stands on the mud</div>\n        <div><i style=\"background:var(--us-soft);border:2px solid var(--us)\"></i>sits in the green zone under a shield, tops up garrisons</div>\n        <div>Solid arrow — capture and hold, dashed — REG counter-rallies, dotted — reinforcements from under shields.</div>", "h2_1": "Deployment template", "h2_2": "Alliance roles", "h2_3": "How to pick the main towers", "h2_4": "How much time we must take away", "h2_5": "Battle flow", "h2_6": "Battle rules", "h2_7": "Confirmed", "pTpl": "Example: the enemy main force sets up to the south. Then the towers farthest from them, W and N, are the main ones — we hold them to the death. The near ones, S and E, are secondary: we hold them while it is cheap and retake them with counter-rallies. If the enemy sets up on another side, the whole scheme rotates.", "roles": "<div class=\"role core\"><h3>IRON — the City</h3><small>garrison of the main objective</small><p>The level-30 player captures the City at the start: according to the wiki, the garrison cap equals the capturer's rally capacity. IRON's 32 T8 hold and rotate the garrison, REG's T9 top it up during an assault.</p></div>\n    <div class=\"role\"><h3>REG — the strike fist</h3><small>mobile reserve</small><p>Stands on the mud on the enemy side, closest to the center. Does not sit in a tower: runs counter-rallies on the City and secondary towers right after our towers fire. Always keeps part of its force for the last hour.</p></div>\n    <div class=\"role\"><h3>GOD — main tower W</h3><small>hold to the death</small><p>GOD's best rally leader takes the tower first. The garrison must never be empty, not even for a second; SHN and T7 top it up from under shields.</p></div>\n    <div class=\"role\"><h3>SWA — main tower N</h3><small>hold to the death</small><p>28 T8 hold the garrison by numbers and rotation. RPL and T7 top it up from under shields.</p></div>\n    <div class=\"role weak\"><h3>POH and KTK — towers S and E</h3><small>secondary</small><p>Take them at the start before the enemy arrives. Hold while it is cheap. When the tower falls, don't throw troops away — pull back and wait for REG's counter-rally.</p></div>\n    <div class=\"role weak\"><h3>Weak alliances and all T7</h3><small>green zone under shields</small><p>A long shield goes up before the start. They top up garrisons after every shot from enemy towers: garrison losses must be replaced immediately.</p></div>", "pPick": "The attackers enter the kingdom before the defense begins, so we will see their positions in advance. The rule is simple: the main towers are the two that the enemy's strongest alliances have the longest march to. Their waves arrive less often there, and our reinforcements arrive faster. The two towers closest to their main force are secondary: they will storm them anyway, so let them spend troops and time on it.", "pProg": "Progress accumulates for each side and is not reset. So what counts is the total time the enemy has spent holding the City. Estimate based on the wiki: 2 hours of holding with no towers, each tower adds +25% speed.", "tbl": "<table>\n      <thead><tr><th>Towers held by enemy</th><th>They must hold the City</th><th>We must take away out of 240 min</th></tr></thead>\n      <tbody>\n        <tr><td>0</td><td class=\"num\">120 min</td><td class=\"num\">more than 120 min</td></tr>\n        <tr><td>1</td><td class=\"num\">96 min</td><td class=\"num\">more than 144 min</td></tr>\n        <tr><td>2</td><td class=\"num\">80 min</td><td class=\"num\">more than 160 min</td></tr>\n        <tr><td>3</td><td class=\"num\">69 min</td><td class=\"num\">more than 171 min</td></tr>\n        <tr><td>4</td><td class=\"num\">60 min</td><td class=\"num\">more than 180 min</td></tr>\n      </tbody>\n    </table>", "pCoef": "The in-game multipliers may differ, but the conclusion stays the same: every tower we hold buys us time.", "pOurs": "The table works in our favor too. Our bar grows while the City is ours, and at 100% we win early. If we take the City and all four towers at the start and hold them, by this estimate an hour is enough. With two towers — about 80 minutes. So the first hour is not a warm-up, it is our best chance to end the battle.", "phases": "<div class=\"phase\"><div><h3>Before the battle</h3><p>Everyone in the green zone raises long shields in advance: scouting and reinforcing block new shields for 15 minutes. There are no shields on the mud, so strong players move there as late as possible, but before the enemy, to take spots by their towers: this forces the enemy to stand farther away, making their marches longer. Scout the entire enemy deployment and pick the main towers.</p></div></div>\n    <div class=\"phase\"><div><h3>Start: race for the City</h3><p>The City and towers are neutral at the start — whoever is first holds it. IRON's level-30 player stands closest to the City in advance and sends the rally in the first second. The backup capturer is a REG rally: if the enemy got there first, REG strikes immediately, before their garrison fills up. At the same time, the best rally leaders of GOD, SWA, POH and KTK take the towers, and everyone else immediately tops up the garrisons.</p></div></div>\n    <div class=\"phase\"><div><h3>First hour: push for an early win</h3><p>If we hold the City and three or four towers at the start, our bar runs almost twice as fast. While the enemy is still deploying, we hold everything and don't give up even secondary towers without a fight: each of them speeds us up.</p></div></div>\n    <div class=\"phase\"><div><h3>Holding</h3><p>Main towers and the City are held at all times. Secondary towers — while it is cheap. Every shot from an enemy tower at the City is the signal to top up the garrison.</p></div></div>\n    <div class=\"phase\"><div><h3>If the City falls</h3><p>Their bar is running — every minute counts. Our towers thin out their garrison, and right after a shot REG launches a counter-rally while IRON tops up. Even 5–10 minutes of our control are minutes taken off their progress.</p></div></div>\n    <div class=\"phase\"><div><h3>The last hour</h3><p>A strong enemy runs out of steam toward the end. REG and SWA must still have fresh troops and healing speed-ups. If their bar is close to 100%, everything we have goes to the City.</p></div></div>", "rules": "<li>The goal is time, not kills. Kill points are not worth a lost tower.</li>\n    <li>One person in charge of each objective in chat: they call top-ups and retreats.</li>\n    <li>Counter-rallies only after our towers fire, never blind.</li>\n    <li>Attackers on the mud have no shields. Those who hit our objectives can be taken out by individual T8 players — but only if it doesn't hurt our holding.</li>\n    <li>Check the infirmaries of key players: anything that doesn't fit dies for good.</li>\n    <li>Don't spend healing speed-ups in the first hour unless necessary.</li>", "check": "<ul style=\"margin-top:0\">\n      <li>The City is neutral at the start — the first seconds decide who holds it.</li>\n      <li>Shields can't be raised on the mud — only those who can take a hit stand there.</li>\n      <li>Our bar reaching 100% means an early victory.</li>\n      <li>Progress is kept by both sides when the owner changes.</li>\n    </ul>\n    <p class=\"note\" style=\"margin:10px 0 0\">The scheme is built on alliance rosters from the previous battle. If they have changed, the deployment should be recalculated.</p>"};
+const RU={};document.querySelectorAll("[data-i18n]").forEach(el=>{RU[el.dataset.i18n]=el.innerHTML});
+const META={ru:{title:"Оборона Королевского города — план",map:"Шаблон расстановки обороны вокруг Королевского города",btn:"EN",lbl:"Switch to English",t7:"т7"},
+            en:{title:"Royal City Defense — Plan",map:"Defense deployment template around the Royal City",btn:"RU",lbl:"Переключить на русский",t7:"T7"}};
+const langBtn=document.getElementById("langBtn");
+function setLang(l){
+  lang=l;const d=l==="en"?EN:RU;
+  document.querySelectorAll("[data-i18n]").forEach(el=>{const v=d[el.dataset.i18n];if(v!=null)el.innerHTML=v});
+  document.documentElement.lang=l;document.title=META[l].title;
+  document.querySelector(".map svg").setAttribute("aria-label",META[l].map);
+  document.querySelector('[data-id="T7"] text').textContent=META[l].t7;
+  langBtn.textContent=META[l].btn;langBtn.setAttribute("aria-label",META[l].lbl);
+  if(cur)show(cur);
+  try{localStorage.setItem("kvk-def-lang",l)}catch(e){}
+}
+langBtn.addEventListener("click",()=>setLang(lang==="ru"?"en":"ru"));
+let saved=null;try{saved=localStorage.getItem("kvk-def-lang")}catch(e){}
+if(saved==="en")setLang("en");
+document.getElementById("themeBtn").addEventListener("click",()=>{
+  const r=document.documentElement;
+  const dark=r.dataset.theme?r.dataset.theme==="dark":matchMedia("(prefers-color-scheme: dark)").matches;
+  r.dataset.theme=dark?"light":"dark";
+});
+</script>
+</body>
+</html>
