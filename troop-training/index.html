@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>План обучения солдат</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#E4E8DF; --surface:#EEF1EA; --ink:#1E2A29; --muted:#5B6862; --line:#C3CBBE;
+  --accent:#B87A12; --window:rgba(184,122,18,.16);
+  --t5:#BCC7AA; --t6:#90A88B; --t7:#5F8B7F; --t8:#3B6A68; --t9:#22424A;
+  --t5-ink:#1E2A29; --t6-ink:#1E2A29; --t7-ink:#F2F5EF; --t8-ink:#F2F5EF; --t9-ink:#F2F5EF;
+  --sel:#1E2A29; --sel-ink:#EEF1EA;
+  color-scheme:light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#141A19; --surface:#1B2321; --ink:#DCE3D9; --muted:#93A099; --line:#33403C;
+    --accent:#E2A43A; --window:rgba(226,164,58,.14);
+    --t5:#56634B; --t6:#6E8B6B; --t7:#7FA597; --t8:#A3C7C0; --t9:#D2E8E2;
+    --t5-ink:#EEF2EA; --t6-ink:#F3F6F0; --t7-ink:#141A19; --t8-ink:#141A19; --t9-ink:#141A19;
+    --sel:#DCE3D9; --sel-ink:#141A19;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#141A19; --surface:#1B2321; --ink:#DCE3D9; --muted:#93A099; --line:#33403C;
+  --accent:#E2A43A; --window:rgba(226,164,58,.14);
+  --t5:#56634B; --t6:#6E8B6B; --t7:#7FA597; --t8:#A3C7C0; --t9:#D2E8E2;
+  --t5-ink:#EEF2EA; --t6-ink:#F3F6F0; --t7-ink:#141A19; --t8-ink:#141A19; --t9-ink:#141A19;
+  --sel:#DCE3D9; --sel-ink:#141A19;
+  color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 1rem/1.55 "Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1120px;margin:0 auto;padding:1rem 1.25rem 4rem}
+h1,h2{font-family:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;font-weight:700;letter-spacing:.005em;margin:0}
+h1{font-size:clamp(2.2rem,5vw,3.6rem);line-height:1.02;max-width:16ch}
+h2{font-size:1.65rem;line-height:1.15;margin-bottom:.9rem}
+p{margin:0 0 .8rem;max-width:68ch}
+.lead{color:var(--muted);font-size:1.1rem;margin-top:.9rem}
+header{display:grid;gap:1.6rem;grid-template-columns:1fr auto;align-items:end;border-bottom:2px solid var(--ink);padding-bottom:1.6rem}
+@media (max-width:760px){header{grid-template-columns:1fr}}
+.controls{display:grid;gap:.7rem}
+.seg{display:inline-flex;border:1.5px solid var(--ink);border-radius:6px;overflow:hidden}
+.seg button{font:600 .95rem/1 "Barlow",sans-serif;padding:.65rem 1rem;border:0;background:transparent;color:var(--ink);cursor:pointer}
+.seg button+button{border-left:1.5px solid var(--ink)}
+.seg button[aria-pressed="true"]{background:var(--sel);color:var(--sel-ink)}
+.seg button:focus-visible,.theme:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.ctl-label{font-size:.85rem;color:var(--muted);margin-bottom:.3rem}
+.result{display:flex;flex-wrap:wrap;gap:.4rem 2.2rem;align-items:baseline;margin:2rem 0 1.2rem}
+.result .num{font-family:"Barlow Condensed",sans-serif;font-weight:700;font-size:clamp(2.6rem,6vw,4rem);line-height:1}
+.result .what{color:var(--muted);max-width:30ch}
+.result .side{font-size:1.05rem}
+.result .side b{font-weight:600}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1.5px solid var(--line);border-radius:8px;background:var(--surface)}
+#gantt{display:block;min-width:860px;width:100%;height:auto}
+#gantt text{font-family:"Barlow",sans-serif}
+.legend{display:flex;flex-wrap:wrap;gap:.5rem 1.2rem;margin:.8rem 0 0;font-size:.9rem;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:.4rem}
+.sw{width:14px;height:14px;border-radius:3px;display:inline-block}
+section{margin-top:3rem}
+.cols{display:grid;grid-template-columns:1.1fr 1fr;gap:2.5rem}
+@media (max-width:860px){.cols{grid-template-columns:1fr}}
+.tbl{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:.55rem .7rem;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-weight:600;color:var(--muted);font-size:.9rem}
+td.n,th.n{text-align:right}
+tr.cur td{background:var(--window)}
+tr.cur td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
+.tier{display:inline-block;min-width:2.1em;text-align:center;padding:.05rem .35rem;border-radius:4px;font-weight:600;font-size:.88rem}
+.k5{background:var(--t5);color:var(--t5-ink)}.k6{background:var(--t6);color:var(--t6-ink)}.k7{background:var(--t7);color:var(--t7-ink)}.k8{background:var(--t8);color:var(--t8-ink)}.k9{background:var(--t9);color:var(--t9-ink)}
+.day{font-family:"Barlow Condensed",sans-serif;font-weight:700;font-size:1.15rem;white-space:nowrap}
+.time{white-space:nowrap;font-variant-numeric:tabular-nums;font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:.3rem .7rem;margin-top:.3rem;font-size:.92rem}
+.note{color:var(--muted);font-size:.92rem;margin-top:1rem}
+.topbar{display:flex;justify-content:flex-end;gap:.6rem;margin-bottom:1.4rem}
+.seg.sm button{padding:.45rem .7rem;font-size:.85rem}
+.theme{font:600 .85rem/1 "Barlow",sans-serif;background:transparent;color:var(--ink);border:1.5px solid var(--ink);border-radius:6px;padding:.45rem .75rem;cursor:pointer;display:inline-flex;align-items:center;gap:.4rem}
+.theme svg{width:15px;height:15px}
+@media (prefers-reduced-motion:no-preference){#gantt rect.bar{transition:width .25s ease}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div class="seg sm" id="segLang" role="group" aria-label="Language">
+      <button data-v="ru" aria-pressed="true">RU</button>
+      <button data-v="en" aria-pressed="false">EN</button>
+    </div>
+    <button class="theme" id="themeBtn" type="button"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 1.5a6.5 6.5 0 0 1 0 13z" fill="currentColor"/></svg><span data-i="theme"></span></button>
+  </div>
+  <header>
+    <div>
+      <h1 data-i="h1"></h1>
+      <p class="lead" data-i="lead"></p>
+    </div>
+    <div class="controls">
+      <div>
+        <div class="ctl-label" data-i="ctlSpeed"></div>
+        <div class="seg" id="segStrat" role="group">
+          <button data-v="limited" aria-pressed="true" data-i="optLimited"></button>
+          <button data-v="unlimited" aria-pressed="false" data-i="optUnlimited"></button>
+        </div>
+      </div>
+      <div>
+        <div class="ctl-label" data-i="ctlBonus"></div>
+        <div class="seg" id="segBonus" role="group">
+          <button data-v="base" aria-pressed="true" data-i="optBase"></button>
+          <button data-v="plus" aria-pressed="false">+20%</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="result">
+    <div class="num" id="rTotal">0</div>
+    <div class="what" data-i="resWhat"></div>
+    <div class="side"><span data-i="resSpeed"></span> <b id="rSpeed">0</b></div>
+    <div class="side"><span data-i="resDiff"></span> <b id="rDiff">0</b></div>
+  </div>
+
+  <div class="scroll"><svg id="gantt" role="img"></svg></div>
+  <div class="legend" id="legend"></div>
+
+  <section class="cols">
+    <div>
+      <h2 id="stratTitle"></h2>
+      <div id="stratText"></div>
+    </div>
+    <div>
+      <h2 data-i="hCmp"></h2>
+      <div class="tbl"><table id="cmp"></table></div>
+    </div>
+  </section>
+
+  <section>
+    <h2 data-i="hBatches"></h2>
+    <div class="tbl"><table id="batches"></table></div>
+    <p class="note" data-i="batchNote"></p>
+  </section>
+
+  <section>
+    <h2 data-i="hPlan"></h2>
+    <div class="tbl"><table id="plan"></table></div>
+  </section>
+
+  <section>
+    <h2 data-i="hTiers"></h2>
+    <div class="tbl"><table id="tiers"></table></div>
+  </section>
+</div>
+
+<script>
+const PER={5:120,6:140,7:160,8:180,9:200};
+const D={
+  limited:{
+    base:{l16:[[6,409],[7,358],[8,318],[9,286]],l24:[[6,444],[7,474],[8,478],[9,430]],mini:115,miniFri:112},
+    plus:{l16:[[6,491],[7,429],[8,382],[9,343]],l24:[[6,533],[7,569],[8,574],[9,516]],mini:138,miniFri:135}
+  },
+  unlimited:{
+    base:{l16:[[5,444],[5,474],[5,477],[5,477]],l24:[[5,444],[5,474],[5,512],[5,544]],mini:115,miniFri:112},
+    plus:{l16:[[5,533],[5,569],[5,573],[5,573]],l24:[[5,533],[5,569],[5,614],[5,653]],mini:138,miniFri:135}
+  }
+};
+const CAP={base:[444,474,512,544],plus:[533,569,614,653]};
+// day indexes: 0 Fri,1 Sat,2 Sun,3 Mon,4 Tue,5 Wed,6 Thu
+const WIN=[
+  {h:0,d:0,s:'17:00',e:'21:00',ed:0,e10:'20:55'},
+  {h:20,d:1,s:'13:00',e:'17:00',ed:1,e10:'16:50'},
+  {h:40,d:2,s:'09:00',e:'13:00',ed:2,e10:'12:50'},
+  {h:68,d:3,s:'13:00',e:'17:00',ed:3,e10:'16:50'},
+  {h:88,d:4,s:'09:00',e:'13:00',ed:4,e10:'12:50'},
+  {h:108,d:5,s:'05:00',e:'09:00',ed:5,e10:'08:50'},
+  {h:128,d:6,s:'01:00',e:'05:00',ed:6,e10:'04:50'},
+  {h:148,d:6,s:'21:00',e:'01:00',ed:0,e10:'00:50'}
+];
+const NEXT=[[1,'13:00'],[2,'09:00'],[3,'13:00'],[4,'09:00'],[5,'05:00'],[6,'01:00'],[6,'21:00'],[0,'17:00']];
+
+const T={
+ ru:{
+  title:'План обучения солдат',
+  days:['Пт','Сб','Вс','Пн','Вт','Ср','Чт'],
+  tier:t=>'т'+t, g:i=>'Полигон '+i, gs:i=>'П'+i, h:'ч', locale:'ru-RU',
+  theme:'Тема',
+  h1:'Обучение солдат',
+  lead:'Две стратегии для четырёх полигонов: когда ускорений около 8 дней и когда их сколько угодно. Переключайте варианты, и график, таблицы и итоги пересчитаются.',
+  ctlSpeed:'Ускорения на повышение', optLimited:'~8 дней', optUnlimited:'Без ограничений',
+  ctlBonus:'Бонусы скорости и вместимости', optBase:'Без бонусов',
+  resWhat:'солдат т9 к пятничному повышению', resSpeed:'Ускорений на повышение:', resDiff:'Против другой стратегии:',
+  days2:d=>d.toFixed(1).replace('.',',')+' дня',
+  hCmp:'Сравнение вариантов', hBatches:'Размер партий', hPlan:'План по дням', hTiers:'Что будет к пятнице',
+  batchNote:'Числа рассчитаны с запасом: мини-партия на 3:50, длинная на 15:55, воскресная на 23:55.',
+  ganttAria:'Загрузка полигонов по часам недели', window:'окно расписания',
+  limTitle:'Каждый полигон учит свой тир', unlTitle:'Только т5, на максимум',
+  limText:`<p>Любой солдат т9 стоит 200 секунд работы, и её оплачивает либо время полигона, либо ускорения. При запасе около 8 дней ускорений выгоднее, чтобы полигоны сами делали большую часть работы.</p>
+     <p>Поэтому в длинных промежутках между окнами каждый полигон учит свой максимальный тир (т6, т7, т8, т9), а партия подобрана так, чтобы занять промежуток целиком. В окнах идут мини-партии т5.</p>
+     <p>Если к пятнице ускорений меньше, замените часть мини-партий повышением т5→т6 прямо в окне: каждая замена экономит 2,5–3 часа ускорений.</p>`,
+  unlText:`<p>Когда повышение целиком покрывают ускорения, важно только количество солдат, прошедших через полигоны. Дешевле всего по времени т5: 120 секунд против 140–200 у других тиров.</p>
+     <p>Все полигоны учат т5 на полную вместимость, в окнах тоже идут мини-партии т5. Полигоны 3 и 4 в 16-часовых промежутках ограничены временем, а в воскресный 24-часовой промежуток учат на максимум.</p>
+     <p>Расчёт предполагает, что ускорения тратятся только на пятничное повышение, а не на само обучение.</p>`,
+  cmpStrat:'Стратегия', cmpLim:'Свой тир, ~8 дней ускорений', cmpUnl:'Только т5, без ограничений',
+  bG:'Полигон', bCap:'Вместимость', b16:'Длинная, 16 ч', b24:'Воскресная, 24 ч', bMini:'Мини в окне', bMiniFri:'Мини в пятницу',
+  pDay:'День', pTime:'Время', pAct:'Действие',
+  pFriStart:'Собрать всё и повысить всех до т9. В первую неделю повышать нечего.',
+  pFriMini:n=>`Мини-партия: ${n} на каждом полигоне`,
+  pStart:n=>`Собрать длинные партии, запустить мини: ${n} на каждом`,
+  pEnd:(sun,next)=>`Собрать мини, запустить ${sun?'воскресные':'обычные'} длинные (готовы к ${next})`,
+  pFinal:'Собрать всё и повысить до т9. Начинается новый цикл.',
+  tTier:'Тир', tCount:'Солдат', tPromo:'Повышение до т9, ч', tTotal:'Всего',
+  tip:(g,t,n,d)=>`${g}: ${t} × ${n}, ${d}`
+ },
+ en:{
+  title:'Troop training plan',
+  days:['Fri','Sat','Sun','Mon','Tue','Wed','Thu'],
+  tier:t=>'T'+t, g:i=>'Ground '+i, gs:i=>'G'+i, h:'h', locale:'en-US',
+  theme:'Theme',
+  h1:'Troop training',
+  lead:'Two strategies for four training grounds: with about 8 days of speedups, and with unlimited speedups. Switch the options and the chart, tables and totals update.',
+  ctlSpeed:'Speedups for promotion', optLimited:'~8 days', optUnlimited:'Unlimited',
+  ctlBonus:'Speed and capacity bonuses', optBase:'No bonuses',
+  resWhat:'T9 troops by the Friday promotion', resSpeed:'Speedups for promotion:', resDiff:'Versus the other strategy:',
+  days2:d=>d.toFixed(1)+' days',
+  hCmp:'Compare the options', hBatches:'Batch sizes', hPlan:'Day-by-day plan', hTiers:'What you have by Friday',
+  batchNote:'Numbers include a safety margin: mini batch 3:50, long batch 15:55, Sunday batch 23:55.',
+  ganttAria:'Training ground load by hour of the week', window:'schedule window',
+  limTitle:'Each ground trains its own tier', unlTitle:'T5 only, at full capacity',
+  limText:`<p>Every T9 troop costs 200 seconds of work, paid either by training ground time or by speedups. With about 8 days of speedups, it pays to let the grounds do most of the work themselves.</p>
+     <p>So in the long gaps between windows each ground trains its highest tier (T6, T7, T8, T9), with the batch sized to fill the whole gap. During windows, run mini batches of T5.</p>
+     <p>If you have fewer speedups by Friday, replace some mini batches with a T5→T6 promotion right in the window: each swap saves 2.5–3 hours of speedups.</p>`,
+  unlText:`<p>When speedups cover all promotions, only the number of troops passing through the grounds matters. T5 is the cheapest in ground time: 120 seconds versus 140–200 for other tiers.</p>
+     <p>All grounds train T5 at full capacity, and windows run T5 mini batches too. Grounds 3 and 4 are limited by time in the 16-hour gaps and train at full capacity in the 24-hour Sunday gap.</p>
+     <p>This assumes speedups are spent only on the Friday promotion, not on training itself.</p>`,
+  cmpStrat:'Strategy', cmpLim:'Own tier, ~8 days of speedups', cmpUnl:'T5 only, unlimited',
+  bG:'Ground', bCap:'Capacity', b16:'Long, 16 h', b24:'Sunday, 24 h', bMini:'Mini in window', bMiniFri:'Mini on Friday',
+  pDay:'Day', pTime:'Time', pAct:'Action',
+  pFriStart:'Collect everything and promote all troops to T9. Nothing to promote in the first week.',
+  pFriMini:n=>`Mini batch: ${n} on each ground`,
+  pStart:n=>`Collect long batches, start mini: ${n} on each`,
+  pEnd:(sun,next)=>`Collect mini, start ${sun?'Sunday':'regular'} long batches (ready by ${next})`,
+  pFinal:'Collect everything and promote to T9. A new cycle begins.',
+  tTier:'Tier', tCount:'Troops', tPromo:'Promotion to T9, h', tTotal:'Total',
+  tip:(g,t,n,d)=>`${g}: ${t} × ${n}, ${d}`
+ }
+};
+
+let st={strat:'limited',bonus:'base',lang:(navigator.language||'').toLowerCase().startsWith('ru')?'ru':'en'};
+try{
+  const s=localStorage.getItem('plan-strat'),b=localStorage.getItem('plan-bonus'),l=localStorage.getItem('plan-lang');
+  if(s&&D[s])st.strat=s; if(b==='base'||b==='plus')st.bonus=b; if(l==='ru'||l==='en')st.lang=l;
+}catch(e){}
+const L=()=>T[st.lang];
+const fmt=n=>Math.round(n).toLocaleString(L().locale);
+const tg=t=>`<span class="tier k${t}">${L().tier(t)}</span>`;
+function hm(h){const m=Math.round(h*60);return Math.floor(m/60)+':'+String(m%60).padStart(2,'0')}
+
+function calc(s,b){
+  const d=D[s][b],sp=b==='plus'?1.2:1;
+  const tiers={5:0,6:0,7:0,8:0,9:0};
+  tiers[5]+=4*d.miniFri+7*4*d.mini;
+  d.l16.forEach(([t,n])=>tiers[t]+=7*n);
+  d.l24.forEach(([t,n])=>tiers[t]+=n);
+  let total=0,speed=0;
+  for(const t in tiers){total+=tiers[t];speed+=tiers[t]*(200-PER[t])/sp}
+  return {tiers,total,speedH:speed/3600};
+}
+
+function gantt(){
+  const t=L(),d=D[st.strat][st.bonus],sp=st.bonus==='plus'?1.2:1;
+  const LW=92,W=990,top=34,rh=30,gap=12,H=top+4*(rh+gap)+6;
+  const x=h=>LW+h/168*W;
+  const svg=document.getElementById('gantt');
+  svg.setAttribute('viewBox',`0 0 ${LW+W+16} ${H}`);
+  svg.setAttribute('aria-label',t.ganttAria);
+  let o='';
+  WIN.forEach(w=>{o+=`<rect x="${x(w.h)}" y="${top-6}" width="${x(w.h+4)-x(w.h)}" height="${H-top+6}" style="fill:var(--window)"/>`});
+  const days=[[1,7],[2,31],[3,55],[4,79],[5,103],[6,127],[0,151]];
+  o+=`<text x="${x(0)+3}" y="18" style="fill:var(--muted)" font-size="13">${t.days[0]} 17:00</text>`;
+  days.forEach(([n,h])=>{
+    o+=`<line x1="${x(h)}" x2="${x(h)}" y1="${top-10}" y2="${H}" style="stroke:var(--line)" stroke-width="1"/>`;
+    o+=`<text x="${x(h)+4}" y="18" style="fill:var(--ink)" font-size="14" font-weight="600">${t.days[n]}</text>`;
+  });
+  o+=`<text x="${x(168)-3}" y="18" text-anchor="end" style="fill:var(--muted)" font-size="13">${t.days[0]} 17:00</text>`;
+  const bar=(r,h0,dur,ti,n)=>{
+    const y=top+r*(rh+gap),bx=x(h0),bw=Math.max(1,x(h0+dur)-bx);
+    let b=`<rect class="bar" x="${bx}" y="${y}" width="${bw}" height="${rh}" rx="3" style="fill:var(--t${ti})"><title>${t.tip(t.g(r+1),t.tier(ti),n,hm(dur))}</title></rect>`;
+    if(bw>34)b+=`<text x="${bx+bw/2}" y="${y+rh/2+4.5}" text-anchor="middle" font-size="12.5" font-weight="600" style="fill:var(--t${ti}-ink);pointer-events:none">${bw>70?t.tier(ti)+' ':''}${n}</text>`;
+    return b;
+  };
+  for(let r=0;r<4;r++){
+    const y=top+r*(rh+gap);
+    o+=`<text x="10" y="${y+rh/2+5}" font-size="14" font-weight="600" style="fill:var(--ink)">${t.g(r+1)}</text>`;
+    WIN.forEach((w,i)=>{
+      const m=i===0?d.miniFri:d.mini,s0=i===0?w.h+0.17:w.h;
+      o+=bar(r,s0,m*PER[5]/sp/3600,5,m);
+      const [ti,n]=(i===2?d.l24:d.l16)[r];
+      o+=bar(r,w.h+3.92,n*PER[ti]/sp/3600,ti,n);
+    });
+  }
+  svg.innerHTML=o;
+}
+
+function render(){
+  const t=L();
+  document.documentElement.lang=st.lang;
+  document.title=t.title;
+  document.querySelectorAll('[data-i]').forEach(el=>{el.textContent=t[el.dataset.i]});
+  document.getElementById('segLang').setAttribute('aria-label',st.lang==='ru'?'Язык':'Language');
+
+  const r=calc(st.strat,st.bonus),other=calc(st.strat==='limited'?'unlimited':'limited',st.bonus);
+  document.getElementById('rTotal').textContent=fmt(r.total);
+  document.getElementById('rSpeed').textContent=`≈${fmt(r.speedH)} ${t.h} (${t.days2(r.speedH/24)})`;
+  const diff=(r.total/other.total-1)*100;
+  document.getElementById('rDiff').textContent=(diff>0?'+':'')+diff.toFixed(0)+'%';
+  gantt();
+
+  document.getElementById('legend').innerHTML=[5,6,7,8,9].map(k=>`<span><i class="sw" style="background:var(--t${k})"></i>${t.tier(k)}</span>`).join('')+`<span><i class="sw" style="background:var(--window);outline:1px solid var(--accent)"></i>${t.window}</span>`;
+
+  const lim=st.strat==='limited';
+  document.getElementById('stratTitle').textContent=lim?t.limTitle:t.unlTitle;
+  document.getElementById('stratText').innerHTML=lim?t.limText:t.unlText;
+
+  let c=`<thead><tr><th>${t.cmpStrat}</th><th class="n">${t.optBase}</th><th class="n">+20%</th></tr></thead><tbody>`;
+  [['limited',t.cmpLim],['unlimited',t.cmpUnl]].forEach(([k,n])=>{
+    const a=calc(k,'base'),b=calc(k,'plus');
+    c+=`<tr${k===st.strat?' class="cur"':''}><td>${n}</td><td class="n">${fmt(a.total)}<br><small style="color:var(--muted)">${fmt(a.speedH)} ${t.h}</small></td><td class="n">${fmt(b.total)}<br><small style="color:var(--muted)">${fmt(b.speedH)} ${t.h}</small></td></tr>`;
+  });
+  document.getElementById('cmp').innerHTML=c+'</tbody>';
+
+  const d=D[st.strat][st.bonus];
+  let bt=`<thead><tr><th>${t.bG}</th><th class="n">${t.bCap}</th><th>${t.b16}</th><th>${t.b24}</th><th class="n">${t.bMini}</th><th class="n">${t.bMiniFri}</th></tr></thead><tbody>`;
+  for(let i=0;i<4;i++){
+    const [t1,n1]=d.l16[i],[t2,n2]=d.l24[i];
+    bt+=`<tr><td>${t.g(i+1)}</td><td class="n">${CAP[st.bonus][i]}</td><td>${tg(t1)} ${n1}</td><td>${tg(t2)} ${n2}</td><td class="n">${tg(5)} ${d.mini}</td><td class="n">${tg(5)} ${d.miniFri}</td></tr>`;
+  }
+  document.getElementById('batches').innerHTML=bt+'</tbody>';
+
+  const chips=arr=>'<div class="chips">'+arr.map(([k,n],i)=>`<span>${t.gs(i+1)} ${tg(k)} ${n}</span>`).join('')+'</div>';
+  let p=`<thead><tr><th>${t.pDay}</th><th>${t.pTime}</th><th>${t.pAct}</th></tr></thead><tbody>`;
+  WIN.forEach((w,i)=>{
+    const longArr=i===2?d.l24:d.l16,nx=NEXT[i];
+    if(i===0){
+      p+=`<tr><td class="day">${t.days[0]}</td><td class="time">17:00</td><td>${t.pFriStart}</td></tr>`;
+      p+=`<tr><td></td><td class="time">~17:10</td><td>${t.pFriMini(tg(5)+' '+d.miniFri)}</td></tr>`;
+    }else{
+      p+=`<tr><td class="day">${t.days[w.d]}</td><td class="time">${w.s}</td><td>${t.pStart(tg(5)+' '+d.mini)}</td></tr>`;
+    }
+    p+=`<tr><td class="day">${w.ed!==w.d?t.days[w.ed]:''}</td><td class="time">${w.e10}–${w.e}</td><td>${t.pEnd(i===2,t.days[nx[0]]+' '+nx[1])}${chips(longArr)}</td></tr>`;
+  });
+  p+=`<tr><td class="day">${t.days[0]}</td><td class="time">17:00</td><td>${t.pFinal}</td></tr>`;
+  document.getElementById('plan').innerHTML=p+'</tbody>';
+
+  const sp=st.bonus==='plus'?1.2:1;
+  let tt=`<thead><tr><th>${t.tTier}</th><th class="n">${t.tCount}</th><th class="n">${t.tPromo}</th></tr></thead><tbody>`;
+  [5,6,7,8,9].forEach(k=>{tt+=`<tr><td>${tg(k)}</td><td class="n">${fmt(r.tiers[k])}</td><td class="n">${fmt(r.tiers[k]*(200-PER[k])/sp/3600)}</td></tr>`});
+  tt+=`<tr><td><b>${t.tTotal}</b></td><td class="n"><b>${fmt(r.total)}</b></td><td class="n"><b>${fmt(r.speedH)}</b></td></tr>`;
+  document.getElementById('tiers').innerHTML=tt+'</tbody>';
+
+  [['segStrat','strat'],['segBonus','bonus'],['segLang','lang']].forEach(([id,k])=>
+    document.querySelectorAll('#'+id+' button').forEach(x=>x.setAttribute('aria-pressed',x.dataset.v===st[k]?'true':'false')));
+}
+
+[['segStrat','strat'],['segBonus','bonus'],['segLang','lang']].forEach(([id,key])=>{
+  document.querySelectorAll('#'+id+' button').forEach(b=>b.addEventListener('click',()=>{
+    st[key]=b.dataset.v;
+    try{localStorage.setItem('plan-'+key,st[key])}catch(e){}
+    render();
+  }));
+});
+
+document.getElementById('themeBtn').addEventListener('click',()=>{
+  const root=document.documentElement,cur=root.getAttribute('data-theme');
+  const dark=cur?cur==='dark':matchMedia('(prefers-color-scheme: dark)').matches;
+  root.setAttribute('data-theme',dark?'light':'dark');
+  try{localStorage.setItem('plan-theme',dark?'light':'dark')}catch(e){}
+});
+try{const th=localStorage.getItem('plan-theme');if(th==='light'||th==='dark')document.documentElement.setAttribute('data-theme',th)}catch(e){}
+render();
+</script>
+</body>
+</html>
