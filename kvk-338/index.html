@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Атака на Королевский город — план</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Russo+One&family=PT+Sans:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  --bg:#e7e9e4; --panel:#f6f7f3; --ink:#1d2320; --muted:#5c665f; --line:#c8ccc3;
+  --mud:#b97b56; --mud-dark:#7b4e33; --stone:#8a8f8c; --green:#cfe0c3;
+  --us:#1f6f8b; --us-soft:#d3e7ee; --foe:#b3261e; --foe-soft:#f5d9d6; --gold:#b7791f;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#171b1a; --panel:#202624; --ink:#e6ebe7; --muted:#9aa59e; --line:#36403c;
+    --mud:#8e5c3f; --mud-dark:#5a3826; --stone:#6c7370; --green:#24331f;
+    --us:#58b4d1; --us-soft:#173540; --foe:#ef6b61; --foe-soft:#3d1c1a; --gold:#e0a54a;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#171b1a; --panel:#202624; --ink:#e6ebe7; --muted:#9aa59e; --line:#36403c;
+  --mud:#8e5c3f; --mud-dark:#5a3826; --stone:#6c7370; --green:#24331f;
+  --us:#58b4d1; --us-soft:#173540; --foe:#ef6b61; --foe-soft:#3d1c1a; --gold:#e0a54a;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.55 "PT Sans",system-ui,sans-serif}
+main{max-width:1180px;margin:0 auto;padding:28px 18px 60px}
+h1,h2,h3{font-family:"Russo One","PT Sans",system-ui,sans-serif;font-weight:400;line-height:1.15;margin:0}
+h1{font-size:clamp(28px,4.5vw,46px)}
+h2{font-size:24px;margin:44px 0 14px}
+h3{font-size:18px;margin-bottom:6px}
+p{max-width:74ch;margin:0 0 12px}
+.lead{color:var(--muted);font-size:18px;margin-top:10px}
+.note{font-size:15px;color:var(--muted);max-width:80ch}
+.goal{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;margin-top:22px}
+.goal div{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.goal b{font-family:"Russo One",sans-serif;font-size:26px;color:var(--us);display:block}
+
+.mapwrap{display:grid;grid-template-columns:minmax(0,1fr) 310px;gap:20px;margin-top:20px}
+@media (max-width:900px){.mapwrap{grid-template-columns:1fr}}
+.map{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:10px;overflow-x:auto}
+.map svg{display:block;width:100%;min-width:560px;height:auto}
+.side{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px}
+#info{min-height:150px}
+#info .who{font-family:"Russo One",sans-serif;font-size:22px}
+#info .who.foe{color:var(--foe)}
+.legend{font-size:14px;color:var(--muted);margin-top:14px;display:grid;gap:6px;border-top:1px solid var(--line);padding-top:12px}
+.legend i{display:inline-block;width:14px;height:14px;border-radius:50%;vertical-align:-2px;margin-right:6px}
+.alli{cursor:pointer}
+.alli:hover circle,.alli:focus circle,.alli:hover rect,.alli:focus rect,.alli:hover path,.alli:focus path{stroke-width:4}
+.alli:focus{outline:none}
+
+.table-wrap{overflow-x:auto;background:var(--panel);border:1px solid var(--line);border-radius:14px}
+table{border-collapse:collapse;width:100%;min-width:520px;font-size:16px}
+th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--muted);font-size:14px}
+tr:last-child td{border-bottom:0}
+td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+tr.grp td{font-family:"Russo One",sans-serif;font-size:15px;background:var(--bg)}
+tr.grp.us td{color:var(--us)}
+tr.grp.foe td{color:var(--foe)}
+tr.sum td{font-weight:700}
+
+.roles{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px}
+.role{background:var(--panel);border:1px solid var(--line);border-left:6px solid var(--us);border-radius:10px;padding:14px 16px}
+.role.core{border-left-color:var(--gold)}
+.role.weak{border-left-color:var(--muted)}
+.role.foe{border-left-color:var(--foe)}
+.role p{margin:6px 0 0}
+.role small{color:var(--muted)}
+
+.phases{display:grid;gap:12px;counter-reset:ph}
+.phase{display:grid;grid-template-columns:56px 1fr;gap:14px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.phase::before{counter-increment:ph;content:counter(ph);font-family:"Russo One",sans-serif;font-size:34px;color:var(--us);line-height:1}
+.phase p{margin:4px 0 0}
+.rules{columns:2 300px;column-gap:28px;padding-left:20px}
+.rules li{break-inside:avoid;margin-bottom:8px}
+.check{background:var(--foe-soft);border:1px solid var(--foe);border-radius:12px;padding:14px 18px}
+.check ul{margin:8px 0 0;padding-left:20px}
+.topbtns{position:fixed;right:14px;top:calc(env(safe-area-inset-top,0px) + 12px);display:flex;gap:8px;z-index:5}
+button.theme{border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:999px;padding:6px 12px;font:inherit;font-size:14px;cursor:pointer;z-index:5}
+:focus-visible{outline:3px solid var(--us);outline-offset:2px}
+</style>
+</head>
+<body>
+<div class="topbtns"><button class="theme" id="langBtn" type="button" aria-label="Switch to English">EN</button><button class="theme" id="themeBtn" type="button" data-i18n="theme">Тема</button></div>
+<main>
+  <h1 data-i18n="h1">Атака на Королевский город</h1>
+  <p class="lead" data-i18n="lead">Нападаем на 338. Противник стоит кольцом со всех сторон, но по-настоящему опасен только OATH в правом нижнем углу, у башни E. Остальные слабые и размазаны по кольцу. На старте забираем город и все четыре башни. Держим всё до конца. За N и E бьётся REG, стоя к ним вплотную, IRON помогает на E.</p>
+
+  <div class="goal" data-i18n="goal">
+    <div><b>60 минут</b>столько держать город, если все четыре башни наши</div>
+    <div><b>N и E</b>REG стоит к ним вплотную и бьётся за обе, IRON помогает на E</div>
+    <div><b>W и S</b>GOD и PHN. Противник там слабый, IRON подстраховывает S</div>
+    <div><b>4 часа</b>весь бой. Не дотянули шкалу до 100% — победа за ними</div>
+  </div>
+
+  <h2 data-i18n="h2_1">Расстановка</h2>
+  <p data-i18n="pTpl">Красное — противник по скрину разведки. Свободной зелёнки у грязи нет, зато грязь пустая и встать можно где угодно. Наши ралли-лидеры заранее встают вплотную к каждой башне и к городу, REG — вплотную к N и E, между ними и OATH. Слабые и т7 сидят под щитами на внешней зелёнке, за спинами самых слабых альянсов противника.</p>
+
+  <div class="mapwrap">
+    <div class="map">
+      <svg viewBox="0 0 760 620" role="img" aria-label="Расстановка противника и план атаки на Королевский город">
+        <defs>
+          <marker id="aU" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--us)"/></marker>
+          <marker id="aF" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--foe)"/></marker>
+          <pattern id="tex" width="18" height="18" patternUnits="userSpaceOnUse"><circle cx="4" cy="5" r="1.4" fill="#000" opacity=".07"/><circle cx="13" cy="13" r="1" fill="#000" opacity=".07"/></pattern>
+        </defs>
+        <rect x="0" y="0" width="760" height="620" rx="10" fill="var(--green)"/>
+        <text x="380" y="612" text-anchor="middle" font-family="PT Sans" font-size="12" fill="var(--muted)" data-i18n="svGreen">внешняя зелёнка — под щитами</text>
+
+        <rect x="118" y="88" width="524" height="400" rx="6" fill="var(--mud)"/>
+        <rect x="118" y="88" width="524" height="400" rx="6" fill="url(#tex)"/>
+        <rect x="118" y="88" width="524" height="400" rx="6" fill="none" stroke="var(--ink)" stroke-width="2"/>
+        <text x="128" y="108" font-size="13" fill="#fff" opacity=".85" font-family="PT Sans" data-i18n="svMud">грязь — без щитов</text>
+
+        <!-- enemy: real threats -->
+        <g font-family="Russo One" text-anchor="middle" font-size="13">
+          <g class="alli" tabindex="0" data-id="OATH"><path d="M658 407 H702 Q710 407 710 415 V544 Q710 552 702 552 H601 Q593 552 593 544 V504 Q593 496 601 496 H650 V415 Q650 407 658 407 Z" fill="var(--foe)" stroke="var(--panel)" stroke-width="2"/><text x="680" y="480" font-size="14" fill="#fff">OATH</text></g>
+          <g class="alli" tabindex="0" data-id="Fla"><rect x="291" y="26" width="275" height="55" rx="10" fill="var(--foe)" stroke="var(--panel)" stroke-width="2"/><text x="428" y="58" fill="#fff">Fla</text></g>
+          <g class="alli" tabindex="0" data-id="DDP"><rect x="51" y="92" width="60" height="55" rx="10" fill="var(--foe)" stroke="var(--panel)" stroke-width="2"/><text x="81" y="124" fill="#fff">DDP</text></g>
+          <g class="alli" tabindex="0" data-id="KA76"><path d="M600 24 H702 Q710 24 710 32 V162 Q710 170 702 170 H658 Q650 170 650 162 V81 H600 Q592 81 592 73 V32 Q592 24 600 24 Z" fill="var(--foe)" stroke="var(--panel)" stroke-width="2"/><text x="651" y="58" fill="#fff">KA76</text></g>
+          <g class="alli" tabindex="0" data-id="WAR"><rect x="153" y="493" width="255" height="58" rx="10" fill="var(--foe)" stroke="var(--panel)" stroke-width="2"/><text x="300" y="527" fill="#fff">WAR</text>
+            <circle cx="180" cy="522" r="14" fill="var(--foe-soft)" stroke="var(--panel)" stroke-width="2"/><text x="180" y="526" font-size="10" fill="var(--foe)" data-i18n="svT10">т10</text></g>
+        </g>
+        <!-- enemy: weak -->
+        <g font-family="Russo One" text-anchor="middle" font-size="12">
+          <g class="alli" tabindex="0" data-id="Xen"><rect x="94" y="27" width="186" height="55" rx="10" fill="var(--foe-soft)" stroke="var(--foe)" stroke-width="2"/><text x="187" y="59" fill="var(--foe)">Xen</text></g>
+          <g class="alli" tabindex="0" data-id="DVLP"><rect x="654" y="185" width="55" height="200" rx="10" fill="var(--foe-soft)" stroke="var(--foe)" stroke-width="2"/><text x="681" y="289" fill="var(--foe)">DVLP</text></g>
+          <g class="alli" tabindex="0" data-id="GER"><rect x="416" y="495" width="167" height="57" rx="10" fill="var(--foe-soft)" stroke="var(--foe)" stroke-width="2"/><text x="500" y="528" fill="var(--foe)">GER</text></g>
+          <g class="alli" tabindex="0" data-id="T7FOE">
+            <rect x="51" y="149" width="60" height="55" rx="10" fill="var(--foe-soft)" stroke="var(--foe)" stroke-width="2"/><text x="81" y="181" fill="var(--foe)">UCC</text>
+            <rect x="51" y="207" width="60" height="55" rx="10" fill="var(--foe-soft)" stroke="var(--foe)" stroke-width="2"/><text x="81" y="239" fill="var(--foe)">BdR</text>
+            <rect x="51" y="265" width="60" height="56" rx="10" fill="var(--foe-soft)" stroke="var(--foe)" stroke-width="2"/><text x="81" y="298" fill="var(--foe)">RAV</text>
+            <rect x="51" y="329" width="60" height="160" rx="10" fill="var(--foe-soft)" stroke="var(--foe)" stroke-width="2"/><text x="81" y="413" fill="var(--foe)">DWE</text>
+            <rect x="51" y="492" width="96" height="58" rx="10" fill="var(--foe-soft)" stroke="var(--foe)" stroke-width="2"/><text x="112" y="525" fill="var(--foe)">RAVN</text>
+          </g>
+        </g>
+        <g stroke="var(--foe)" stroke-width="2.5" fill="none" opacity=".6">
+          <path d="M111 125 L294 240" marker-end="url(#aF)"/>
+          <path d="M360 81 L316 226" marker-end="url(#aF)"/>
+          <path d="M500 81 L452 226" marker-end="url(#aF)"/>
+          <path d="M650 130 L466 242" marker-end="url(#aF)"/>
+          <path d="M290 493 L314 350" marker-end="url(#aF)"/>
+          <path d="M650 415 L470 330" marker-end="url(#aF)" stroke-width="5"/>
+        </g>
+
+        <!-- inner zone -->
+        <rect x="300" y="233" width="160" height="110" rx="4" fill="var(--mud-dark)"/>
+        <rect x="357" y="266" width="46" height="44" rx="3" fill="var(--stone)" stroke="var(--gold)" stroke-width="3"/>
+        <text x="380" y="294" text-anchor="middle" font-family="Russo One" font-size="18" fill="#fff">C</text>
+        <g font-family="Russo One" font-size="13" text-anchor="middle">
+          <rect x="299" y="232" width="26" height="26" rx="3" fill="var(--us)"/><text x="312" y="250" fill="#fff">W</text>
+          <rect x="435" y="232" width="26" height="26" rx="3" fill="var(--us)"/><text x="448" y="250" fill="#fff">N</text>
+          <rect x="299" y="318" width="26" height="26" rx="3" fill="var(--us)"/><text x="312" y="336" fill="#fff">S</text>
+          <rect x="435" y="318" width="26" height="26" rx="3" fill="var(--us)"/><text x="448" y="336" fill="#fff">E</text>
+        </g>
+        <g font-family="PT Sans" font-size="11" fill="#fff" text-anchor="middle">
+          <text x="312" y="273" data-i18n="svMain">главная</text><text x="448" y="273" data-i18n="svMain">главная</text>
+          <text x="312" y="311" data-i18n="svMain">главная</text><text x="448" y="311" data-i18n="svMain">главная</text>
+        </g>
+
+        <!-- our alliances -->
+        <g font-family="Russo One" text-anchor="middle">
+          <g class="alli" tabindex="0" data-id="IRON"><circle cx="380" cy="390" r="25" fill="var(--gold)" stroke="var(--panel)" stroke-width="2"/><text x="380" y="395" font-size="12" fill="#fff">IRON</text></g>
+          <g class="alli" tabindex="0" data-id="REG"><circle cx="515" cy="290" r="27" fill="var(--us)" stroke="var(--panel)" stroke-width="2"/><text x="515" y="295" font-size="13" fill="#fff">REG</text></g>
+          <g class="alli" tabindex="0" data-id="GOD"><circle cx="245" cy="190" r="24" fill="var(--us)" stroke="var(--panel)" stroke-width="2"/><text x="245" y="195" font-size="12" fill="#fff">GOD</text></g>
+          <g class="alli" tabindex="0" data-id="PHN"><circle cx="232" cy="405" r="21" fill="var(--us)" stroke="var(--panel)" stroke-width="2"/><text x="232" y="409" font-size="11" fill="#fff">PHN</text></g>
+          <!-- outer green -->
+          <g class="alli" tabindex="0" data-id="RPL"><circle cx="25" cy="230" r="17" fill="var(--us-soft)" stroke="var(--us)" stroke-width="2"/><text x="25" y="234" font-size="10" fill="var(--us)">RPL</text></g>
+          <g class="alli" tabindex="0" data-id="T7"><circle cx="250" cy="580" r="18" fill="var(--us-soft)" stroke="var(--us)" stroke-width="2"/><text x="250" y="584" font-size="11" fill="var(--us)">т7</text></g>
+          <g class="alli" tabindex="0" data-id="HUNT"><circle cx="38" cy="45" r="20" fill="var(--panel)" stroke="var(--us)" stroke-width="2" stroke-dasharray="4 3"/><text x="38" y="49" font-size="10" fill="var(--us)" data-i18n="svHunt">охота</text></g>
+          <g class="alli" tabindex="0" data-id="HUNT"><circle cx="735" cy="585" r="20" fill="var(--panel)" stroke="var(--us)" stroke-width="2" stroke-dasharray="4 3"/><text x="735" y="589" font-size="10" fill="var(--us)" data-i18n="svHunt">охота</text></g>
+        </g>
+        <g stroke="var(--us)" stroke-width="1.6" fill="none" stroke-dasharray="1 5" stroke-linecap="round" opacity=".8">
+          <path d="M28 66 Q20 120 22 205"/>
+          <path d="M735 563 Q740 450 735 400"/>
+        </g>
+
+        <!-- our arrows -->
+        <g stroke="var(--us)" stroke-width="2.5" fill="none">
+          <path d="M380 365 L380 316" marker-end="url(#aU)"/>
+          <path d="M248 391 L296 346" marker-end="url(#aU)"/>
+          <path d="M262 207 L297 234" marker-end="url(#aU)"/>
+          <path d="M490 278 L465 252" marker-end="url(#aU)"/>
+          <path d="M490 302 L465 326" marker-end="url(#aU)"/>
+          <!-- IRON help, REG counter-rallies -->
+          <path d="M400 375 L434 344" marker-end="url(#aU)" stroke-dasharray="5 4"/>
+          <path d="M360 375 L326 344" marker-end="url(#aU)" stroke-dasharray="5 4"/>
+          <path d="M488 290 L408 290" marker-end="url(#aU)" stroke-dasharray="5 4"/>
+        </g>
+        <g stroke="var(--us)" stroke-width="1.8" fill="none" stroke-dasharray="2 4">
+          <path d="M42 236 Q180 250 296 248" marker-end="url(#aU)"/>
+          <path d="M258 563 L306 350" marker-end="url(#aU)"/>
+        </g>
+      </svg>
+    </div>
+
+    <aside class="side">
+      <div id="info" aria-live="polite" data-i18n="info">
+        <div class="who">Нажми на альянс</div>
+        <p class="note">Свой или чужой: покажу роль в атаке или силы противника.</p>
+      </div>
+      <div class="legend" data-i18n="legend">
+        <div><i style="background:var(--gold)"></i>берёт и держит город</div>
+        <div><i style="background:var(--us)"></i>берёт и держит башню или бьёт контр-ралли, стоит на грязи</div>
+        <div><i style="background:var(--us-soft);border:2px solid var(--us)"></i>стоит на внешней зелёнке под щитом, крепит гарнизоны</div>
+        <div><i style="background:var(--panel);border:2px dashed var(--us)"></i>охотники: летают по зелёнке и выбивают тех, у кого слетел щит</div>
+        <div><i style="background:var(--foe)"></i>противник с т9 или т10</div>
+        <div><i style="background:var(--foe-soft);border:2px solid var(--foe)"></i>противник без т9, в основном т7</div>
+        <div>Сплошная стрелка — захват и удержание, штрих — контр-ралли REG и помощь IRON, точки — креп из-под щита. Толстая красная — главный удар OATH.</div>
+      </div>
+    </aside>
+  </div>
+
+  <h2 data-i18n="h2_2">Сравнение сил</h2>
+  <div class="table-wrap" data-i18n="tblForce">
+    <table>
+      <thead><tr><th>Альянс</th><th>Игроков</th><th>т10</th><th>т9</th><th>т8</th><th>Ср. ур.</th><th>Сила</th><th>Где стоит</th></tr></thead>
+      <tbody>
+        <tr class="grp us"><td colspan="8">Мы</td></tr>
+        <tr><td>REG</td><td class="num">93</td><td class="num">1</td><td class="num">10</td><td class="num">52</td><td class="num">~24</td><td class="num">87</td><td>грязь вплотную к N и E</td></tr>
+        <tr><td>IRON</td><td class="num">99</td><td class="num">1</td><td class="num">9</td><td class="num">45</td><td class="num">~23</td><td class="num">77</td><td>грязь вплотную к городу, помогает на E и S</td></tr>
+        <tr><td>GOD</td><td class="num">95</td><td class="num">—</td><td class="num">6</td><td class="num">38</td><td class="num">~23</td><td class="num">56</td><td>грязь у башни W</td></tr>
+        <tr><td>PHN</td><td class="num">99</td><td class="num">—</td><td class="num">—</td><td class="num">21</td><td class="num">~22</td><td class="num">21</td><td>грязь у башни S</td></tr>
+        <tr><td>RPL</td><td class="num">96</td><td class="num">—</td><td class="num">1</td><td class="num">3</td><td class="num">~21</td><td class="num">6</td><td>внешняя зелёнка слева, под щитами</td></tr>
+        <tr class="sum"><td>Итого</td><td class="num">482</td><td class="num">2</td><td class="num">26</td><td class="num">159</td><td></td><td class="num">247</td><td></td></tr>
+        <tr class="grp foe"><td colspan="8">Противник</td></tr>
+        <tr><td>OATH</td><td class="num">100</td><td class="num">—</td><td class="num">11</td><td class="num">48</td><td class="num">~24</td><td class="num">81</td><td>правый нижний угол, у E</td></tr>
+        <tr><td>Fla</td><td class="num">99</td><td class="num">—</td><td class="num">2</td><td class="num">40</td><td class="num">~23</td><td class="num">46</td><td>сверху, между W и N</td></tr>
+        <tr><td>DDP</td><td class="num">100</td><td class="num">—</td><td class="num">2</td><td class="num">35</td><td class="num">~23</td><td class="num">41</td><td>слева сверху, у W</td></tr>
+        <tr><td>KA76</td><td class="num">93</td><td class="num">—</td><td class="num">2</td><td class="num">22</td><td class="num">~23</td><td class="num">28</td><td>правый верхний угол, у N</td></tr>
+        <tr><td>WAR</td><td class="num">99</td><td class="num">1</td><td class="num">—</td><td class="num">11</td><td class="num">~21</td><td class="num">16</td><td>снизу, у S</td></tr>
+        <tr><td>DVLP</td><td class="num">97</td><td class="num">—</td><td class="num">1</td><td class="num">5</td><td class="num">~21</td><td class="num">8</td><td>справа, между N и E</td></tr>
+        <tr><td>GER</td><td class="num">99</td><td class="num">—</td><td class="num">—</td><td class="num">7</td><td class="num">~20</td><td class="num">7</td><td>снизу, между S и E</td></tr>
+        <tr><td>Xen</td><td class="num">98</td><td class="num">—</td><td class="num">—</td><td class="num">2</td><td class="num">~20</td><td class="num">2</td><td>сверху слева, у W</td></tr>
+        <tr><td>UCC, BdR, RAV, DWE, RAVN</td><td class="num">?</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="num">?</td><td class="num">0</td><td>слева и в левом нижнем углу, считаем т7</td></tr>
+        <tr class="sum"><td>Итого</td><td class="num">785+</td><td class="num">1</td><td class="num">18</td><td class="num">170</td><td></td><td class="num">229</td><td></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p data-i18n="pForce">Сила считается как раньше: т10 = 5, т9 = 3, т8 = 1. По сумме у нас 247 против 229, т9 и т10 — 28 против 19, т8 почти поровну. Но главное не сумма. У противника восемь альянсов с данными плюс пять с т7, и они стоят кольцом. 11 из 18 их т9 сидят в одном OATH. На всё остальное кольцо у них 7 т9 и один т10, так что их ралли почти везде слабые.</p>
+  <p class="note" data-i18n="pForceNote">На скрине альянс подписан как K76, в данных — KA76, считаем это одним альянсом. Сколько игроков реально выйдет, неизвестно, поэтому считаем полный состав.</p>
+
+  <h2 data-i18n="h2_3">Главные и второстепенные башни</h2>
+  <p data-i18n="pPick">Правило то же: главные — башни с наименьшей силой противника в коротком марше. Fla и DVLP стоят между двумя башнями, их считаем к обеим.</p>
+  <div class="table-wrap" data-i18n="tblTowers">
+    <table>
+      <thead><tr><th>Башня</th><th>Кто из них рядом</th><th>т9–т10</th><th>т8</th><th>Сила</th><th>Что делаем</th></tr></thead>
+      <tbody>
+        <tr><td>S</td><td>WAR + т7 слева снизу</td><td class="num">1</td><td class="num">11</td><td class="num">16</td><td>главная: PHN, IRON подстраховывает</td></tr>
+        <tr><td>N</td><td>Fla + KA76 + DVLP</td><td class="num">5</td><td class="num">67</td><td class="num">82</td><td>главная: REG</td></tr>
+        <tr><td>W</td><td>DDP + Fla + Xen</td><td class="num">4</td><td class="num">77</td><td class="num">89</td><td>главная: GOD</td></tr>
+        <tr><td>E</td><td>OATH + GER + DVLP</td><td class="num">12</td><td class="num">60</td><td class="num">96</td><td>главная и самая тяжёлая: REG + IRON</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p data-i18n="pPickNote">По силе W, N и E близки, но по ралли разница резкая. У W и N на всё 4–5 т9 из трёх разных альянсов. У E — 12, и 11 из них в одном OATH, который умеет бить вместе. Поэтому на E ставим самое сильное, что есть: REG стоит вплотную к башне, IRON помогает на захвате и доливает гарнизон. OATH ловим контр-ралли REG сразу после каждого их штурма, пока их отряды на лечении.</p>
+
+  <h2 data-i18n="h2_4">Роли альянсов</h2>
+  <div class="roles" data-i18n="roles">
+    <div class="role core"><h3>IRON — город</h3><small>главная цель</small><p>Игрок 30 ур. стоит вплотную к городу и шлёт ралли в первую секунду: потолок гарнизона равен ёмкости ралли захватившего. Соперник в гонке — т10 WAR. Шесть т9 и 30 т8 ротируют гарнизон города. Два т9 и 10 т8 помогают REG взять и удержать E. Один т9 берёт ралли S для PHN, 5 т8 доливают туда гарнизон.</p></div>
+    <div class="role"><h3>REG — N и E</h3><small>вплотную к башням, против OATH</small><p>Стоит на грязи вплотную к N и E. Т9 REG берут обе башни на старте, E — вместе с IRON. В N сидят 2 т9 и 20 т8, на E — основная сила: т10, 8 т9 и 32 т8. Бьёт контр-ралли на N, E и город сразу после выстрела наших башен. Игрок 30 ур. — ещё и страховка в гонке за город. Часть сил всегда держит на последний час.</p></div>
+    <div class="role"><h3>GOD — башня W</h3><small>главная</small><p>Лучший т9 GOD берёт башню на старте. 6 т9 и 38 т8 против DDP, Fla и Xen, у которых на троих 4 т9. Если Fla и DDP пойдут на W вместе, IRON из города бьёт контр-ралли.</p></div>
+    <div class="role"><h3>PHN — башня S</h3><small>главная, почти без боя</small><p>Своих т9 у PHN нет, поэтому башню берёт ралли т9 IRON. Дальше держат 21 т8 PHN и 5 т8 IRON. Единственная опасность — ралли т10 WAR: если он выбил гарнизон, IRON бьёт контр-ралли сразу.</p></div>
+    <div class="role weak"><h3>RPL и все т7</h3><small>внешняя зелёнка под щитами</small><p>Свободной зелёнки у грязи нет, поэтому встают снаружи кольца, за спинами слабых альянсов: слева и снизу. Креп щит не снимает, так что доливают гарнизоны W и S прямо из-под щита. Единственный т9 RPL вступает в ралли REG.</p></div>
+    <div class="role weak"><h3>Остальные альянсы</h3><small>охота и креп</small><p>Часть крепит тех, кто стоит в грязи. Основная часть летает по зелёнке и выбивает тех, у кого слетел щит. Целей много: половина кольца — альянсы на т7. Чем меньше их дойдёт до грязи, тем проще.</p></div>
+  </div>
+
+  <h2 data-i18n="h2_5">Кольцо противника</h2>
+  <div class="roles" data-i18n="ring">
+    <div class="role foe"><h3>OATH</h3><small>главная угроза</small><p>11 т9 и 48 т8, правый нижний угол. Будут бить E и город. REG стоит вплотную к E, IRON рядом. Одиночками с ними не меняемся: только ралли REG и IRON сразу после их атаки, пока их отряды на лечении.</p></div>
+    <div class="role foe"><h3>WAR</h3><small>т10 у S</small><p>Сам альянс слабый, 11 т8, но его т10 — соперник в гонке за город и единственная угроза для S. Где он встанет перед стартом, следим до последней минуты.</p></div>
+    <div class="role foe"><h3>Fla и DDP</h3><small>у W</small><p>Вместе 4 т9 и 75 т8. Если скоординируются, могут давить W массой. GOD держит, IRON подстраховывает контр-ралли.</p></div>
+    <div class="role foe"><h3>Масса т7</h3><small>опасна только числом</small><p>UCC, BdR, RAV, DWE, RAVN, Xen, GER и почти весь DVLP. Ралли на башни у них не выйдет, но числом могут заливать гарнизоны. Их работа охотников: выбивать тех, у кого слетел щит.</p></div>
+  </div>
+
+  <h2 data-i18n="h2_6">Сколько держать город</h2>
+  <p data-i18n="pProg">Прогресс копится и не сбрасывается. Прикидка по вики та же: 2 часа удержания без башен, каждая башня даёт +25% к скорости.</p>
+  <div class="table-wrap" data-i18n="tbl">
+    <table>
+      <thead><tr><th>Наших башен</th><th>Держать город</th><th>Можно потерять из 240 мин</th></tr></thead>
+      <tbody>
+        <tr><td>0</td><td class="num">120 мин</td><td class="num">до 120 мин</td></tr>
+        <tr><td>1</td><td class="num">96 мин</td><td class="num">до 144 мин</td></tr>
+        <tr><td>2</td><td class="num">80 мин</td><td class="num">до 160 мин</td></tr>
+        <tr><td>3</td><td class="num">69 мин</td><td class="num">до 171 мин</td></tr>
+        <tr><td>4</td><td class="num">60 мин</td><td class="num">до 180 мин</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p data-i18n="pOurs">Удержим все четыре башни — бой закончится через 60 минут. Даже если E продержим только первые 30 минут, а остальные три весь бой, выйдет около 65. Пока E наша, она ещё и не стреляет по нашему гарнизону в городе.</p>
+  <p class="note" data-i18n="pCoef">Запас по времени есть, но у них своя шкала. Если они возьмут город, каждая минута их владения опасна.</p>
+
+  <h2 data-i18n="h2_7">Ход боя</h2>
+  <div class="phases" data-i18n="phases">
+    <div class="phase"><div><h3>До боя</h3><p>Зелёнка вокруг грязи занята, поэтому RPL и т7 заранее встают снаружи кольца, слева и снизу, под длинными щитами. Сильные выходят на грязь как можно позже, но раньше противника: IRON вплотную к городу, GOD у W, PHN у S, REG вплотную к N и E. Разведку делают те, кто уже стоит на грязи: у них щита нет, а у тех, кто на зелёнке, разведка его снимет. Следим за т10 WAR.</p></div></div>
+    <div class="phase"><div><h3>Старт: всё сразу</h3><p>Город и башни нейтральны. Игрок IRON 30 ур. отправляет ралли на город в первую секунду, игрок REG 30 ур. сразу следом — как страховка против т10 WAR. Одновременно т9 GOD берёт W, т9 REG — N, т9 REG вместе с т9 IRON — E, т9 IRON — S. Остальные сразу доливают гарнизоны.</p></div></div>
+    <div class="phase"><div><h3>Первый час: рывок</h3><p>С городом и четырьмя башнями шкала бежит вдвое быстрее. Кольцо из тринадцати альянсов быстро не сговорится, так что первый час — наш лучший шанс.</p></div></div>
+    <div class="phase"><div><h3>Удержание</h3><p>Город и все четыре башни держим постоянно. Главный бой — у E: OATH будет бить туда волнами. После каждой волны REG сразу бьёт контр-ралли, IRON доливает гарнизон. Упала любая башня — контр-ралли сразу, пока их гарнизон не залит: на N и E бьёт REG, на W и S — IRON.</p></div></div>
+    <div class="phase"><div><h3>Если город пал</h3><p>Пошла их шкала. Наши башни прореживают их гарнизон, сразу после выстрела REG бьёт контр-ралли, IRON заходит обратно и доливает. Город важнее любой башни.</p></div></div>
+    <div class="phase"><div><h3>Если OATH взял E</h3><p>Не сливаем войска в лоб. Ждём, пока их отряды уйдут на лечение после штурма, и сразу забираем башню ралли REG и IRON. Город при этом не оголяем.</p></div></div>
+    <div class="phase"><div><h3>Последний час</h3><p>Если шкала не дотягивает, всё, что есть, идёт на город. У REG к этому моменту должны остаться свежие войска и ускорения лечения.</p></div></div>
+  </div>
+
+  <h2 data-i18n="h2_8">Правила на бой</h2>
+  <ul class="rules" data-i18n="rules">
+    <li>Цель — время в городе, а не убийства.</li>
+    <li>Один ответственный за каждый объект в чате: командует доливкой и отходом.</li>
+    <li>На OATH ходим только ралли REG и IRON. Одиночных боёв с ними не начинаем.</li>
+    <li>Контр-ралли — сразу после выстрела наших башен, не вслепую.</li>
+    <li>Щит снимают разведка и атака, креп — нет. Кто стоит под щитом, только крепит.</li>
+    <li>На грязи щитов нет: туда выходят только т8 и выше.</li>
+    <li>Охотники бьют только тех, у кого слетел щит, в первую очередь тех, кто идёт к грязи.</li>
+    <li>Проверить лазареты у ключевых игроков: всё, что не влезает, гибнет насовсем.</li>
+    <li>Ускорения лечения тратим в первую очередь на город и E. Остальное — в резерв на последний час.</li>
+  </ul>
+</main>
+<script>
+const R={
+  IRON:"Город. Игрок 30 ур. берёт его в первую секунду, чтобы потолок гарнизона был максимальным. 6 т9 и 30 т8 ротируют гарнизон, 2 т9 и 10 т8 помогают REG на E, 1 т9 и 5 т8 — PHN на S.",
+  REG:"Вплотную к N и E. Т9 берут обе башни на старте, E — вместе с IRON. В N — 2 т9 и 20 т8, на E — т10, 8 т9 и 32 т8. Контр-ралли на N, E и город сразу после выстрела наших башен.",
+  GOD:"Башня W, главная. Берёт лучший т9 GOD, 38 т8 держат ротацией. Напротив DDP, Fla и Xen — у них на троих 4 т9.",
+  PHN:"Башня S, главная. Берёт ралли т9 IRON, держат 21 т8 PHN и 5 т8 IRON. Опасен только т10 WAR.",
+  RPL:"Внешняя зелёнка слева, под длинным щитом. Крепит гарнизон W. Единственный т9 вступает в ралли REG.",
+  T7:"Все т7: внешняя зелёнка снизу, под длинными щитами. Крепят S, креп щит не снимает.",
+  HUNT:"Основная часть альянсов ниже топ-5. Летают по зелёнке и выбивают тех, у кого слетел щит. Чем меньше противника дойдёт до грязи, тем проще.",
+  OATH:"100 игроков: 11 т9, 48 т8, ср. ур. ~24, сила 81. Главная угроза. Правый нижний угол, у E.",
+  Fla:"99 игроков: 2 т9, 40 т8, ср. ур. ~23, сила 46. Сверху, между W и N.",
+  DDP:"100 игроков: 2 т9, 35 т8, ср. ур. ~23, сила 41. Слева сверху, у W.",
+  KA76:"93 игрока: 2 т9, 22 т8, ср. ур. ~23, сила 28. Правый верхний угол, у N. На скрине подписан K76.",
+  WAR:"99 игроков: 1 т10, 11 т8, ср. ур. ~21, сила 16. Снизу, у S. Их т10 — соперник в гонке за город.",
+  DVLP:"97 игроков: 1 т9, 5 т8, ср. ур. ~21, сила 8. Справа, между N и E.",
+  GER:"99 игроков: 7 т8, ср. ур. ~20, сила 7. Снизу, между S и E.",
+  Xen:"98 игроков: 2 т8, ср. ур. ~20, сила 2. Сверху слева, у W.",
+  T7FOE:"UCC, BdR, RAV, DWE, RAVN — данных нет, считаем, что в массе т7 и ниже. Опасны только числом. Цели для охотников."
+};
+const REN={
+  IRON:"The City. The level-30 player takes it in the first second so the garrison cap is as high as possible. 6 T9 and 30 T8 rotate the garrison, 2 T9 and 10 T8 help REG at E, 1 T9 and 5 T8 help PHN at S.",
+  REG:"Right next to N and E. T9s take both towers at the start, E together with IRON. 2 T9 and 20 T8 in N, T10, 8 T9 and 32 T8 at E. Counter-rallies on N, E and the City right after our towers fire.",
+  GOD:"Tower W, main. GOD's best T9 takes it, 38 T8 hold it by rotation. Facing DDP, Fla and Xen — 4 T9 between the three of them.",
+  PHN:"Tower S, main. An IRON T9 rally takes it, 21 PHN T8 and 5 IRON T8 hold it. Only WAR's T10 is a danger.",
+  RPL:"Outer green zone on the left, under a long shield. Reinforces the W garrison. Its only T9 joins REG's rallies.",
+  T7:"All T7: outer green zone at the bottom, under long shields. They reinforce S — reinforcing doesn't drop the shield.",
+  HUNT:"Most of the alliances below the top 5. They fly around the green zone and take out anyone whose shield is down. The fewer enemies reach the mud, the easier it is.",
+  OATH:"100 players: 11 T9, 48 T8, avg level ~24, power 81. The main threat. Bottom-right corner, by E.",
+  Fla:"99 players: 2 T9, 40 T8, avg level ~23, power 46. On top, between W and N.",
+  DDP:"100 players: 2 T9, 35 T8, avg level ~23, power 41. Top left, by W.",
+  KA76:"93 players: 2 T9, 22 T8, avg level ~23, power 28. Top-right corner, by N. Labeled K76 on the screenshot.",
+  WAR:"99 players: 1 T10, 11 T8, avg level ~21, power 16. At the bottom, by S. Their T10 is our rival in the race for the City.",
+  DVLP:"97 players: 1 T9, 5 T8, avg level ~21, power 8. On the right, between N and E.",
+  GER:"99 players: 7 T8, avg level ~20, power 7. At the bottom, between S and E.",
+  Xen:"98 players: 2 T8, avg level ~20, power 2. Top left, by W.",
+  T7FOE:"UCC, BdR, RAV, DWE, RAVN — no data, we assume mostly T7 and below. Dangerous only by numbers. Targets for the hunters."
+};
+const FOE=new Set(["OATH","Fla","DDP","KA76","WAR","DVLP","GER","Xen","T7FOE"]);
+const NAMES={ru:{T7:"т7",HUNT:"Охотники",REGN:"REG у N",T7FOE:"Альянсы на т7"},
+             en:{T7:"T7",HUNT:"Hunters",REGN:"REG at N",T7FOE:"T7 alliances"}};
+let lang="ru",cur=null;
+const info=document.getElementById("info");
+function show(id){cur=id;const t=lang==="en"?REN[id]:R[id];const n=NAMES[lang][id]||id;info.innerHTML=`<div class="who${FOE.has(id)?" foe":""}">${n}</div><p>${t}</p>`}
+document.querySelectorAll(".alli").forEach(g=>{
+  g.addEventListener("click",()=>show(g.dataset.id));
+  g.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();show(g.dataset.id)}});
+});
+const EN={"theme":"Theme","h1":"Attack on the Royal City",
+"lead":"We attack 338. The enemy stands in a ring on all sides, but only OATH in the bottom-right corner, by tower E, is really dangerous. The rest are weak and spread around the ring. At the start we take the City and all four towers. We hold everything to the end. REG fights for N and E standing right next to them, IRON helps at E.",
+"goal":"<div><b>60 minutes</b>that is how long we hold the City if all four towers are ours</div>\n    <div><b>N and E</b>REG stands right next to them and fights for both, IRON helps at E</div>\n    <div><b>W and S</b>GOD and PHN. The enemy is weak there, IRON backs up S</div>\n    <div><b>4 hours</b>the whole battle. If our bar doesn't reach 100% — they win</div>",
+"svGreen":"outer green zone — under shields","svMud":"mud — no shields","svT10":"T10","svMain":"main","svSec":"second.","svHunt":"hunt",
+"info":"<div class=\"who\">Tap an alliance</div>\n        <p class=\"note\">Ours or theirs: I will show its role in the attack or the enemy's strength.</p>",
+"legend":"<div><i style=\"background:var(--gold)\"></i>takes and holds the City</div>\n        <div><i style=\"background:var(--us)\"></i>takes and holds a tower or runs counter-rallies, stands on the mud</div>\n        <div><i style=\"background:var(--us-soft);border:2px solid var(--us)\"></i>stands in the outer green zone under a shield, reinforces garrisons</div>\n        <div><i style=\"background:var(--panel);border:2px dashed var(--us)\"></i>hunters: fly around the green zone and take out anyone whose shield is down</div>\n        <div><i style=\"background:var(--foe)\"></i>enemy with T9 or T10</div>\n        <div><i style=\"background:var(--foe-soft);border:2px solid var(--foe)\"></i>enemy without T9, mostly T7</div>\n        <div>Solid arrow — capture and hold, dashed — REG counter-rallies and IRON's help, dotted — reinforcements from under shields. Thick red — OATH's main strike.</div>",
+"h2_1":"Deployment","h2_2":"Strength comparison","h2_3":"Main and secondary towers","h2_4":"Alliance roles","h2_5":"The enemy ring","h2_6":"How long to hold the City","h2_7":"Battle flow","h2_8":"Battle rules",
+"pTpl":"Red is the enemy, from the scouting screenshot. There is no free green zone next to the mud, but the mud itself is empty and anyone can stand anywhere. Our rally leaders take spots right next to every tower and the City in advance, REG stands right next to N and E, between them and OATH. Weak players and T7 sit under shields in the outer green zone, behind the enemy's weakest alliances.",
+"tblForce":"<table>\n      <thead><tr><th>Alliance</th><th>Players</th><th>T10</th><th>T9</th><th>T8</th><th>Avg lvl</th><th>Power</th><th>Position</th></tr></thead>\n      <tbody>\n        <tr class=\"grp us\"><td colspan=\"8\">Us</td></tr>\n        <tr><td>REG</td><td class=\"num\">93</td><td class=\"num\">1</td><td class=\"num\">10</td><td class=\"num\">52</td><td class=\"num\">~24</td><td class=\"num\">87</td><td>mud right next to N and E</td></tr>\n        <tr><td>IRON</td><td class=\"num\">99</td><td class=\"num\">1</td><td class=\"num\">9</td><td class=\"num\">45</td><td class=\"num\">~23</td><td class=\"num\">77</td><td>mud right next to the City, helps at E and S</td></tr>\n        <tr><td>GOD</td><td class=\"num\">95</td><td class=\"num\">—</td><td class=\"num\">6</td><td class=\"num\">38</td><td class=\"num\">~23</td><td class=\"num\">56</td><td>mud by tower W</td></tr>\n        <tr><td>PHN</td><td class=\"num\">99</td><td class=\"num\">—</td><td class=\"num\">—</td><td class=\"num\">21</td><td class=\"num\">~22</td><td class=\"num\">21</td><td>mud by tower S</td></tr>\n        <tr><td>RPL</td><td class=\"num\">96</td><td class=\"num\">—</td><td class=\"num\">1</td><td class=\"num\">3</td><td class=\"num\">~21</td><td class=\"num\">6</td><td>outer green zone on the left, under shields</td></tr>\n        <tr class=\"sum\"><td>Total</td><td class=\"num\">482</td><td class=\"num\">2</td><td class=\"num\">26</td><td class=\"num\">159</td><td></td><td class=\"num\">247</td><td></td></tr>\n        <tr class=\"grp foe\"><td colspan=\"8\">Enemy</td></tr>\n        <tr><td>OATH</td><td class=\"num\">100</td><td class=\"num\">—</td><td class=\"num\">11</td><td class=\"num\">48</td><td class=\"num\">~24</td><td class=\"num\">81</td><td>bottom-right corner, by E</td></tr>\n        <tr><td>Fla</td><td class=\"num\">99</td><td class=\"num\">—</td><td class=\"num\">2</td><td class=\"num\">40</td><td class=\"num\">~23</td><td class=\"num\">46</td><td>top, between W and N</td></tr>\n        <tr><td>DDP</td><td class=\"num\">100</td><td class=\"num\">—</td><td class=\"num\">2</td><td class=\"num\">35</td><td class=\"num\">~23</td><td class=\"num\">41</td><td>top left, by W</td></tr>\n        <tr><td>KA76</td><td class=\"num\">93</td><td class=\"num\">—</td><td class=\"num\">2</td><td class=\"num\">22</td><td class=\"num\">~23</td><td class=\"num\">28</td><td>top-right corner, by N</td></tr>\n        <tr><td>WAR</td><td class=\"num\">99</td><td class=\"num\">1</td><td class=\"num\">—</td><td class=\"num\">11</td><td class=\"num\">~21</td><td class=\"num\">16</td><td>bottom, by S</td></tr>\n        <tr><td>DVLP</td><td class=\"num\">97</td><td class=\"num\">—</td><td class=\"num\">1</td><td class=\"num\">5</td><td class=\"num\">~21</td><td class=\"num\">8</td><td>right, between N and E</td></tr>\n        <tr><td>GER</td><td class=\"num\">99</td><td class=\"num\">—</td><td class=\"num\">—</td><td class=\"num\">7</td><td class=\"num\">~20</td><td class=\"num\">7</td><td>bottom, between S and E</td></tr>\n        <tr><td>Xen</td><td class=\"num\">98</td><td class=\"num\">—</td><td class=\"num\">—</td><td class=\"num\">2</td><td class=\"num\">~20</td><td class=\"num\">2</td><td>top left, by W</td></tr>\n        <tr><td>UCC, BdR, RAV, DWE, RAVN</td><td class=\"num\">?</td><td class=\"num\">—</td><td class=\"num\">—</td><td class=\"num\">—</td><td class=\"num\">?</td><td class=\"num\">0</td><td>left and bottom-left corner, assumed T7</td></tr>\n        <tr class=\"sum\"><td>Total</td><td class=\"num\">785+</td><td class=\"num\">1</td><td class=\"num\">18</td><td class=\"num\">170</td><td></td><td class=\"num\">229</td><td></td></tr>\n      </tbody>\n    </table>",
+"pForce":"Power is counted as before: T10 = 5, T9 = 3, T8 = 1. In total we have 247 vs 229, T9 and T10 — 28 vs 19, T8 almost even. But the total isn't the point. The enemy has eight alliances with data plus five T7 ones, and they stand in a ring. 11 of their 18 T9 sit in OATH alone. For the whole rest of the ring they have 7 T9 and one T10, so their rallies are weak almost everywhere.",
+"pForceNote":"The screenshot labels the alliance K76, the data says KA76 — we treat them as one alliance. We don't know how many players will actually show up, so we count full rosters.",
+"pPick":"Same rule: the main towers are the ones with the least enemy power within a short march. Fla and DVLP stand between two towers, so we count them toward both.",
+"tblTowers":"<table>\n      <thead><tr><th>Tower</th><th>Enemy nearby</th><th>T9–T10</th><th>T8</th><th>Power</th><th>What we do</th></tr></thead>\n      <tbody>\n        <tr><td>S</td><td>WAR + T7 at the bottom left</td><td class=\"num\">1</td><td class=\"num\">11</td><td class=\"num\">16</td><td>main: PHN, IRON backs it up</td></tr>\n        <tr><td>N</td><td>Fla + KA76 + DVLP</td><td class=\"num\">5</td><td class=\"num\">67</td><td class=\"num\">82</td><td>main: REG</td></tr>\n        <tr><td>W</td><td>DDP + Fla + Xen</td><td class=\"num\">4</td><td class=\"num\">77</td><td class=\"num\">89</td><td>main: GOD</td></tr>\n        <tr><td>E</td><td>OATH + GER + DVLP</td><td class=\"num\">12</td><td class=\"num\">60</td><td class=\"num\">96</td><td>main and the toughest: REG + IRON</td></tr>\n      </tbody>\n    </table>",
+"pPickNote":"By power W, N and E are close, but by rallies the difference is sharp. W and N face 4–5 T9 in total from three different alliances. E faces 12, and 11 of them are in OATH alone, which can strike together. So we put our strongest on E: REG stands right next to the tower, IRON helps with the capture and tops up the garrison. We catch OATH with REG counter-rallies right after each of their assaults, while their troops are healing.",
+"roles":"<div class=\"role core\"><h3>IRON — the City</h3><small>main objective</small><p>The level-30 player stands right next to the City and sends the rally in the first second: the garrison cap equals the capturer's rally capacity. The rival in the race is WAR's T10. Six T9 and 30 T8 rotate the City garrison. Two T9 and 10 T8 help REG take and hold E. One T9 rallies S for PHN, 5 T8 top up the garrison there.</p></div>\n    <div class=\"role\"><h3>REG — N and E</h3><small>right next to the towers, against OATH</small><p>Stands on the mud right next to N and E. REG T9s take both towers at the start, E together with IRON. 2 T9 and 20 T8 sit in N, the main force is at E: T10, 8 T9 and 32 T8. Counter-rallies on N, E and the City right after our towers fire. The level-30 player is also insurance in the race for the City. Always keeps part of its force for the last hour.</p></div>\n    <div class=\"role\"><h3>GOD — tower W</h3><small>main</small><p>GOD's best T9 takes the tower at the start. 6 T9 and 38 T8 against DDP, Fla and Xen, who have 4 T9 between the three of them. If Fla and DDP go for W together, IRON counter-rallies from the City.</p></div>\n    <div class=\"role\"><h3>PHN — tower S</h3><small>main, almost no fight</small><p>PHN has no T9 of its own, so an IRON T9 rally takes the tower. Then 21 PHN T8 and 5 IRON T8 hold it. The only danger is a rally from WAR's T10: if it wipes the garrison, IRON counter-rallies immediately.</p></div>\n    <div class=\"role weak\"><h3>RPL and all T7</h3><small>outer green zone under shields</small><p>There is no free green zone next to the mud, so they stand outside the ring, behind the weak alliances: on the left and at the bottom. Reinforcing doesn't drop the shield, so they top up the W and S garrisons right from under it. RPL's only T9 joins REG's rallies.</p></div>\n    <div class=\"role weak\"><h3>Other alliances</h3><small>hunting and reinforcing</small><p>Some reinforce those standing on the mud. Most fly around the green zone and take out anyone whose shield is down. There are plenty of targets: half the ring is T7 alliances. The fewer of them reach the mud, the easier it is.</p></div>",
+"ring":"<div class=\"role foe\"><h3>OATH</h3><small>the main threat</small><p>11 T9 and 48 T8, bottom-right corner. They will hit E and the City. REG stands right next to E, IRON close by. No solo trades with them: only REG and IRON rallies right after their attack, while their troops are healing.</p></div>\n    <div class=\"role foe\"><h3>WAR</h3><small>T10 by S</small><p>The alliance itself is weak, 11 T8, but its T10 is our rival in the race for the City and the only threat to S. Keep watching where it stands until the last minute before the start.</p></div>\n    <div class=\"role foe\"><h3>Fla and DDP</h3><small>by W</small><p>Together 4 T9 and 75 T8. If they coordinate, they can push W by numbers. GOD holds, IRON backs it up with counter-rallies.</p></div>\n    <div class=\"role foe\"><h3>The T7 mass</h3><small>dangerous only by numbers</small><p>UCC, BdR, RAV, DWE, RAVN, Xen, GER and almost all of DVLP. They can't rally a tower, but they can flood garrisons by numbers. They are the hunters' job: take out anyone whose shield is down.</p></div>",
+"pProg":"Progress accumulates and is not reset. Same wiki estimate: 2 hours of holding with no towers, each tower adds +25% speed.",
+"tbl":"<table>\n      <thead><tr><th>Our towers</th><th>Hold the City</th><th>Can lose out of 240 min</th></tr></thead>\n      <tbody>\n        <tr><td>0</td><td class=\"num\">120 min</td><td class=\"num\">up to 120 min</td></tr>\n        <tr><td>1</td><td class=\"num\">96 min</td><td class=\"num\">up to 144 min</td></tr>\n        <tr><td>2</td><td class=\"num\">80 min</td><td class=\"num\">up to 160 min</td></tr>\n        <tr><td>3</td><td class=\"num\">69 min</td><td class=\"num\">up to 171 min</td></tr>\n        <tr><td>4</td><td class=\"num\">60 min</td><td class=\"num\">up to 180 min</td></tr>\n      </tbody>\n    </table>",
+"pOurs":"Hold all four towers and the battle is over in 60 minutes. Even if we hold E only for the first 30 minutes and the other three the whole time, it is about 65. And while E is ours, it doesn't shoot at our garrison in the City.",
+"pCoef":"We have time to spare, but they have their own bar. If they take the City, every minute they hold it is dangerous.",
+"phases":"<div class=\"phase\"><div><h3>Before the battle</h3><p>The green zone around the mud is taken, so RPL and T7 set up in advance outside the ring, on the left and at the bottom, under long shields. Strong players move onto the mud as late as possible, but before the enemy: IRON right next to the City, GOD by W, PHN by S, REG right next to N and E. Scouting is done by those already on the mud: they have no shield anyway, while scouting would drop the shield of anyone in the green zone. Watch WAR's T10.</p></div></div>\n    <div class=\"phase\"><div><h3>Start: everything at once</h3><p>The City and towers are neutral. IRON's level-30 player sends the rally on the City in the first second, REG's level-30 player right after as insurance against WAR's T10. At the same time a GOD T9 takes W, a REG T9 takes N, REG and IRON T9s take E together, an IRON T9 takes S. Everyone else immediately tops up the garrisons.</p></div></div>\n    <div class=\"phase\"><div><h3>First hour: the push</h3><p>With the City and four towers our bar runs twice as fast. A ring of thirteen alliances won't coordinate quickly, so the first hour is our best chance.</p></div></div>\n    <div class=\"phase\"><div><h3>Holding</h3><p>The City and all four towers are held at all times. The main fight is at E: OATH will hit it in waves. After each wave REG counter-rallies immediately and IRON tops up the garrison. If any tower falls, counter-rally right away, before their garrison fills up: REG on N and E, IRON on W and S.</p></div></div>\n    <div class=\"phase\"><div><h3>If the City falls</h3><p>Their bar is running. Our towers thin out their garrison, right after a shot REG counter-rallies, IRON moves back in and tops up. The City matters more than any tower.</p></div></div>\n    <div class=\"phase\"><div><h3>If OATH took E</h3><p>We don't throw troops at it head-on. We wait until their troops go to heal after the assault and immediately take the tower back with REG and IRON rallies. The City is not left bare meanwhile.</p></div></div>\n    <div class=\"phase\"><div><h3>The last hour</h3><p>If our bar is falling short, everything we have goes to the City. By then REG must still have fresh troops and healing speed-ups.</p></div></div>",
+"rules":"<li>The goal is time in the City, not kills.</li>\n    <li>One person in charge of each objective in chat: they call top-ups and retreats.</li>\n    <li>Only REG and IRON rallies go against OATH. We don't start solo fights with them.</li>\n    <li>Counter-rallies right after our towers fire, never blind.</li>\n    <li>Scouting and attacking drop the shield, reinforcing doesn't. Anyone under a shield only reinforces.</li>\n    <li>No shields on the mud: only T8 and above go there.</li>\n    <li>Hunters hit only those whose shield is down, first of all those heading for the mud.</li>\n    <li>Check the infirmaries of key players: anything that doesn't fit dies for good.</li>\n    <li>Healing speed-ups go to the City and E first. The rest is kept for the last hour.</li>"};
+const RU={};document.querySelectorAll("[data-i18n]").forEach(el=>{RU[el.dataset.i18n]=el.innerHTML});
+const META={ru:{title:"Атака на Королевский город — план",map:"Расстановка противника и план атаки на Королевский город",btn:"EN",lbl:"Switch to English",t7:"т7"},
+            en:{title:"Attack on the Royal City — Plan",map:"Enemy deployment and attack plan on the Royal City",btn:"RU",lbl:"Переключить на русский",t7:"T7"}};
+const langBtn=document.getElementById("langBtn");
+function setLang(l){
+  lang=l;const d=l==="en"?EN:RU;
+  document.querySelectorAll("[data-i18n]").forEach(el=>{const v=d[el.dataset.i18n];if(v!=null)el.innerHTML=v});
+  document.documentElement.lang=l;document.title=META[l].title;
+  document.querySelector(".map svg").setAttribute("aria-label",META[l].map);
+  document.querySelector('[data-id="T7"] text').textContent=META[l].t7;
+  langBtn.textContent=META[l].btn;langBtn.setAttribute("aria-label",META[l].lbl);
+  if(cur)show(cur);
+  try{localStorage.setItem("kvk-def-lang",l)}catch(e){}
+}
+langBtn.addEventListener("click",()=>setLang(lang==="ru"?"en":"ru"));
+let saved=null;try{saved=localStorage.getItem("kvk-def-lang")}catch(e){}
+if(saved==="en")setLang("en");
+document.getElementById("themeBtn").addEventListener("click",()=>{
+  const r=document.documentElement;
+  const dark=r.dataset.theme?r.dataset.theme==="dark":matchMedia("(prefers-color-scheme: dark)").matches;
+  r.dataset.theme=dark?"light":"dark";
+});
+</script>
+</body>
+</html>
