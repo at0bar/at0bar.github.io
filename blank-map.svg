@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 620" width="760" height="620">
+  <defs>
+    <pattern id="tex" width="18" height="18" patternUnits="userSpaceOnUse"><circle cx="4" cy="5" r="1.4" fill="#000" opacity=".07"/><circle cx="13" cy="13" r="1" fill="#000" opacity=".07"/></pattern>
+  </defs>
+  <rect x="0" y="0" width="760" height="620" rx="10" fill="#cfe0c3"/>
+  <text x="16" y="26" font-family="PT Sans, sans-serif" font-size="13" fill="#5c665f">зелёнка</text>
+
+  <rect x="118" y="88" width="524" height="400" rx="6" fill="#b97b56"/>
+  <rect x="118" y="88" width="524" height="400" rx="6" fill="url(#tex)"/>
+  <rect x="118" y="88" width="524" height="400" rx="6" fill="none" stroke="#1d2320" stroke-width="2"/>
+  <text x="128" y="108" font-size="13" fill="#fff" opacity=".85" font-family="PT Sans, sans-serif">грязь</text>
+
+  <rect x="300" y="233" width="160" height="110" rx="4" fill="#7b4e33"/>
+  <rect x="357" y="266" width="46" height="44" rx="3" fill="#8a8f8c" stroke="#b7791f" stroke-width="3"/>
+  <text x="380" y="294" text-anchor="middle" font-family="Russo One, sans-serif" font-size="18" fill="#fff">C</text>
+  <g font-family="Russo One, sans-serif" font-size="13" text-anchor="middle">
+    <rect x="299" y="232" width="26" height="26" rx="3" fill="#8a8f8c"/><text x="312" y="250" fill="#fff">W</text>
+    <rect x="435" y="232" width="26" height="26" rx="3" fill="#8a8f8c"/><text x="448" y="250" fill="#fff">N</text>
+    <rect x="299" y="318" width="26" height="26" rx="3" fill="#8a8f8c"/><text x="312" y="336" fill="#fff">S</text>
+    <rect x="435" y="318" width="26" height="26" rx="3" fill="#8a8f8c"/><text x="448" y="336" fill="#fff">E</text>
+  </g>
+</svg>

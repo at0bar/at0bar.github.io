@@ -1,0 +1,483 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Server 337 Cities</title>
+<style>
+:root {
+  --bg: #f6f5f1; --panel: #ffffff; --ink: #1d1f24; --muted: #6a6f78; --line: #e2e0d9;
+  --accent: #b5832a; --sel: rgba(181,131,42,.16); --royal: #3a3d44; --neutral: #e9e7e1; --dim: 0.18; --chip: #f0eee8;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #15171b; --panel: #1d2026; --ink: #e8e6e1; --muted: #9aa0a9; --line: #2e323a;
+    --accent: #e0b25a; --sel: rgba(224,178,90,.16); --royal: #0c0d10; --neutral: #2a2d34; --dim: 0.14; --chip: #262a31;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #15171b; --panel: #1d2026; --ink: #e8e6e1; --muted: #9aa0a9; --line: #2e323a;
+  --accent: #e0b25a; --sel: rgba(224,178,90,.16); --royal: #0c0d10; --neutral: #2a2d34; --dim: 0.14; --chip: #262a31;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+header { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; padding: 16px; max-width: 1280px; margin: 0 auto; }
+h1 { font-size: 22px; margin: 0; letter-spacing: -0.01em; }
+h1 small { display: block; font-size: 13px; color: var(--muted); font-weight: 400; }
+h2 { font-size: 18px; margin: 32px 0 12px; }
+h3 { font-size: 15px; margin: 20px 0 6px; }
+main { max-width: 1280px; margin: 0 auto; padding: 0 16px 48px; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--panel); }
+.seg button { border: 0; background: none; color: var(--muted); padding: 6px 12px; font: inherit; cursor: pointer; }
+.seg button.on { background: var(--ink); color: var(--bg); }
+.controls { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.layout { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 16px; align-items: start; }
+@media (max-width: 900px) { .layout { grid-template-columns: minmax(0, 1fr); } }
+.layout > * { min-width: 0; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px; }
+svg.map { width: 100%; height: auto; display: block; border-radius: 8px; touch-action: manipulation; }
+.region { stroke: var(--bg); stroke-width: 1.5; cursor: pointer; transition: opacity .15s; }
+.region.dim { opacity: var(--dim); }
+.region.target { fill-opacity: .28; stroke-dasharray: 6 4; stroke-width: 3; }
+.region.transit { fill-opacity: .55; }
+.region.current { stroke: var(--ink); stroke-width: 5; }
+.region.dropped { fill: var(--neutral); stroke: var(--muted); stroke-dasharray: 3 3; stroke-width: 2; }
+.lbl { pointer-events: none; text-anchor: middle; fill: #fff; font-weight: 700; paint-order: stroke; stroke: rgba(0,0,0,.45); stroke-width: 2.5px; }
+.lbl.sub { font-weight: 500; }
+.lbl.faint { fill: var(--muted); stroke: none; }
+.alist { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px; }
+.chip { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 8px; border: 1px solid var(--line); background: var(--chip); cursor: pointer; font: inherit; color: inherit; text-align: left; }
+.chip.on { outline: 2px solid var(--accent); }
+.sw { width: 14px; height: 14px; border-radius: 4px; flex: none; }
+.chip .meta { color: var(--muted); font-size: 12px; margin-left: auto; }
+.steps { list-style: none; padding: 0; margin: 8px 0 0; max-height: 520px; overflow: auto; }
+.steps li.day { font-weight: 700; margin: 10px 0 4px; color: var(--muted); font-size: 13px; text-transform: uppercase; letter-spacing: .04em; }
+.steps li.step { padding: 5px 8px; border-radius: 6px; cursor: pointer; display: flex; gap: 8px; }
+.steps li.step:hover { background: var(--chip); }
+.steps li.step.on { background: var(--ink); color: var(--bg); }
+.tag-take { color: #2f9e55; font-weight: 700; } .tag-drop { color: #c2463a; font-weight: 700; }
+.steps li.on .tag-take, .steps li.on .tag-drop { color: inherit; }
+.note { color: var(--muted); font-size: 13px; }
+.nav { display: flex; gap: 6px; margin-top: 8px; }
+.nav button, .btn { border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 8px; padding: 6px 12px; font: inherit; cursor: pointer; }
+.legend { display: flex; flex-wrap: wrap; gap: 12px; font-size: 12px; color: var(--muted); margin-top: 8px; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.lg { width: 18px; height: 12px; border-radius: 3px; display: inline-block; }
+.tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); }
+table { border-collapse: collapse; width: 100%; font-size: 13px; font-variant-numeric: tabular-nums; }
+th, td { padding: 7px 10px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; }
+th { color: var(--muted); font-weight: 600; background: var(--panel); position: sticky; top: 0; }
+th:first-child, td:first-child, th.l, td.l { text-align: left; }
+tr:last-child td { border-bottom: 0; }
+tbody tr { cursor: pointer; }
+tbody tr:hover td { background: var(--chip); }
+tbody tr.sel td { background: var(--sel); }
+tbody tr.sel td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
+.tip { position: fixed; pointer-events: none; background: var(--ink); color: var(--bg); padding: 6px 9px; border-radius: 6px; font-size: 12px; max-width: 260px; z-index: 10; display: none; }
+.prose { max-width: 820px; }
+#hMethod, #method { max-width: 820px; margin-left: auto; margin-right: auto; }
+.prose p, .prose li { color: var(--ink); }
+code, .formula { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 13px; background: var(--chip); padding: 1px 5px; border-radius: 4px; }
+.formula { display: block; padding: 8px 12px; margin: 8px 0; white-space: pre-wrap; }
+.bar { display: inline-block; height: 8px; background: var(--accent); border-radius: 4px; vertical-align: middle; }
+footer { color: var(--muted); font-size: 12px; text-align: center; padding: 24px 16px; }
+</style>
+</head>
+<body>
+<header>
+  <h1 id="title"></h1>
+  <div class="controls">
+    <div class="seg" id="variantSeg"></div>
+    <div class="seg" id="langSeg"><button data-lang="ru">RU</button><button data-lang="en">EN</button></div>
+  </div>
+</header>
+<main>
+  <p class="prose" id="intro"></p>
+  <div class="layout">
+    <div class="card">
+      <svg class="map" id="map" viewBox="0 0 999 999" role="img"></svg>
+      <div class="legend" id="legend"></div>
+    </div>
+    <div class="card" id="side"></div>
+  </div>
+
+  <h2 id="hResults"></h2>
+  <div class="tablewrap"><table id="results"></table></div>
+
+  <h2 id="hData"></h2>
+  <div class="tablewrap"><table id="data"></table></div>
+
+  <h2 id="hMethod"></h2>
+  <div class="prose" id="method"></div>
+</main>
+<footer id="footer"></footer>
+<div class="tip" id="tip"></div>
+
+<script>
+const DATA = {"asOf":1793315095,"poolSize":1597,"totalValue":295.7,"variants":["A"],"target":{"REG":56.85795341235741,"IRON":56.316520028803524,"PHN":45.090966582411,"GOD":27.2619511371226,"KTK":17.06135640906522,"POH":15.789568774994857,"RPL":9.773532580782248,"KNG":8.611391185481027,"MDNT":8.588018088771628,"Asp":7.317588610314456,"SyE":5.737558544610714,"SWA":5.72734686173697,"COT":5.326884398054573,"Ukr":4.411370301948301,"LUni":4.252057895713191,"CROW":3.9485105049966904,"EOS":3.782812920622436,"OGN":2.842084866459342,"BRA":2.757604502513938,"PTBR":2.4712496434973357,"CiK":1.7736727497425446},"alliances":[{"tag":"REG","name":"Regulators","powerRank":1,"power":4104378407,"members":93,"eligible":87,"excludedInactive":6,"excludedLowLevel":0,"levelBands":[0,18,60,9],"medianLevel":26,"medianActivity":590,"medianGrowth":6328535,"pLevel":0.815865093768905,"pAct":0.6799722006164838,"pGrowth":0.5867889305888737,"quality":0.6881259240525466,"sizeFactor":9.327379053088816,"kvkDrops":[0.1502553651871235,0.1914998174546092],"kvk":1.2100000000000002,"weight":7.766277709173083,"share":0.0751839192904523},{"tag":"IRON","name":"ЦАРСТВО","powerRank":2,"power":3743769763,"members":99,"eligible":97,"excludedInactive":2,"excludedLowLevel":0,"levelBands":[0,22,68,7],"medianLevel":25,"medianActivity":575,"medianGrowth":6074433,"pLevel":0.7920187065602149,"pAct":0.610782755858719,"pGrowth":0.5678695530059302,"quality":0.6501339200706917,"sizeFactor":9.848857801796104,"kvkDrops":[0.18411570677078187,0.274056328562653],"kvk":1.2100000000000002,"weight":7.747722602389627,"share":0.07500429068289101},{"tag":"PHN","name":"Phoenix of the night","powerRank":4,"power":3192544130,"members":98,"eligible":94,"excludedInactive":4,"excludedLowLevel":0,"levelBands":[2,41,51,0],"medianLevel":24,"medianActivity":570,"medianGrowth":4925601,"pLevel":0.6733489308377326,"pAct":0.6379645923318936,"pGrowth":0.5698049321577333,"quality":0.6247240128226892,"sizeFactor":9.695359714832659,"kvkDrops":[0.16814184248941652,0.2770999588174071],"kvk":1.2100000000000002,"weight":7.328878072439741,"share":0.07094953311250371},{"tag":"GOD","name":"OLYMPUS","powerRank":3,"power":3328660497,"members":100,"eligible":97,"excludedInactive":3,"excludedLowLevel":0,"levelBands":[5,41,46,5],"medianLevel":24,"medianActivity":495,"medianGrowth":3969818,"pLevel":0.6589863834844844,"pAct":0.4263138516394078,"pGrowth":0.5582460662107727,"quality":0.5422918862929085,"sizeFactor":9.848857801796104,"kvkDrops":[0.26165516846894976,0.26183874892584075],"kvk":1.2100000000000002,"weight":6.462556366951632,"share":0.06256283054738},{"tag":"KTK","name":"Kaytekz","powerRank":8,"power":2497787819,"members":84,"eligible":79,"excludedInactive":4,"excludedLowLevel":1,"levelBands":[3,54,22,0],"medianLevel":23,"medianActivity":525,"medianGrowth":3774101,"pLevel":0.5264664826623521,"pAct":0.5134632467244059,"pGrowth":0.5656774895864259,"quality":0.5356392025074967,"sizeFactor":8.888194417315589,"kvkDrops":[0.14638413570497624,0.216942899824345],"kvk":1.2073483661836493,"weight":5.7480230253925795,"share":0.055645563473777894},{"tag":"POH","name":"PitsOfHell","powerRank":5,"power":2797712434,"members":94,"eligible":88,"excludedInactive":6,"excludedLowLevel":0,"levelBands":[7,37,44,0],"medianLevel":24,"medianActivity":540,"medianGrowth":3438574,"pLevel":0.6234335839598997,"pAct":0.5441978525860105,"pGrowth":0.4623871907235042,"quality":0.5393348403463001,"sizeFactor":9.38083151964686,"kvkDrops":[0.04547198482886467,0.12229282230473498],"kvk":1.114314714693742,"weight":5.637774197179118,"share":0.05457826465796586},{"tag":"RPL","name":"Rodzinka","powerRank":6,"power":2557787830,"members":93,"eligible":92,"excludedInactive":1,"excludedLowLevel":0,"levelBands":[8,65,18,1],"medianLevel":22,"medianActivity":515,"medianGrowth":2425704,"pLevel":0.4464081399150049,"pAct":0.49244715048490795,"pGrowth":0.4790878313753243,"quality":0.4739596856255827,"sizeFactor":9.591663046625438,"kvkDrops":[0.0,0.15934730905681488],"kvk":1.1,"weight":5.000667762425623,"share":0.04841055336000936},{"tag":"KNG","name":"Karnage","powerRank":7,"power":2523169337,"members":99,"eligible":92,"excludedInactive":6,"excludedLowLevel":1,"levelBands":[14,64,14,0],"medianLevel":22,"medianActivity":520,"medianGrowth":2845471,"pLevel":0.39410346518470085,"pAct":0.5042259180560096,"pGrowth":0.5140517709961198,"quality":0.47462823072365545,"sizeFactor":9.591663046625438,"kvkDrops":[0.008692445658237955,0.08714922803573907],"kvk":1.064231133542144,"weight":4.844884630909762,"share":0.046902445251427505},{"tag":"MDNT","name":"Midnight Society","powerRank":11,"power":2127258371,"members":84,"eligible":76,"excludedInactive":8,"excludedLowLevel":0,"levelBands":[9,51,15,1],"medianLevel":22,"medianActivity":525,"medianGrowth":2714532,"pLevel":0.4561279844347711,"pAct":0.5040355823769951,"pGrowth":0.4902050755651172,"quality":0.48482262561017053,"sizeFactor":8.717797887081348,"kvkDrops":[0.06205832757561607,0.18827368667221456],"kvk":1.1455094402221184,"weight":4.8415937747588655,"share":0.046870587072707824},{"tag":"Asp","name":"Fallenangel","powerRank":9,"power":2375468591,"members":99,"eligible":75,"excludedInactive":23,"excludedLowLevel":1,"levelBands":[10,43,22,0],"medianLevel":22,"medianActivity":525,"medianGrowth":2189938,"pLevel":0.46690058479532165,"pAct":0.5193191311612364,"pGrowth":0.4658029130360808,"quality":0.4848628909076575,"sizeFactor":8.660254037844387,"kvkDrops":[0.06413660997066734,0.09354879591848853],"kvk":1.1077902273203482,"weight":4.651650833139047,"share":0.04503178406729018},{"tag":"SyE","name":"SystemError","powerRank":10,"power":2292683237,"members":87,"eligible":78,"excludedInactive":7,"excludedLowLevel":2,"levelBands":[16,52,10,0],"medianLevel":22,"medianActivity":540,"medianGrowth":2283613,"pLevel":0.36406320287899235,"pAct":0.5005904183535762,"pGrowth":0.49211879417071624,"quality":0.45666718524720007,"sizeFactor":8.831760866327848,"kvkDrops":[0.002900567739419323,0.12480802518259466],"kvk":1.0852999571175495,"weight":4.377205062188745,"share":0.04237492456967501},{"tag":"SWA","name":"Snow Angel","powerRank":14,"power":1934839444,"members":95,"eligible":50,"excludedInactive":44,"excludedLowLevel":1,"levelBands":[1,27,19,3],"medianLevel":23,"medianActivity":570,"medianGrowth":3386872,"pLevel":0.596328320802005,"pAct":0.6085338345864661,"pGrowth":0.48605124796269034,"quality":0.5620032751328062,"sizeFactor":7.0710678118654755,"kvkDrops":[0.07959288165475718,0.0682560920939598],"kvk":1.1009805154148118,"weight":4.375256128093125,"share":0.04235605729384036},{"tag":"COT","name":"Covenant of Truth","powerRank":12,"power":2083938120,"members":93,"eligible":72,"excludedInactive":17,"excludedLowLevel":4,"levelBands":[12,51,9,0],"medianLevel":22,"medianActivity":500,"medianGrowth":2628353,"pLevel":0.39717784043441934,"pAct":0.4997171748816485,"pGrowth":0.5300789986353838,"quality":0.4795820128612871,"sizeFactor":8.48528137423857,"kvkDrops":[0.022331867412607977,0.06054922873986511],"kvk":1.0558550318119395,"weight":4.296684135284786,"share":0.04159541614926543},{"tag":"Ukr","name":"Ukraine","powerRank":13,"power":1942773552,"members":93,"eligible":83,"excludedInactive":9,"excludedLowLevel":1,"levelBands":[17,58,8,0],"medianLevel":21,"medianActivity":475,"medianGrowth":2156818,"pLevel":0.33737204456925446,"pAct":0.3752642147537519,"pGrowth":0.47491237934386754,"quality":0.3987734213049431,"sizeFactor":9.1104335791443,"kvkDrops":[0.03847984960968536,0.20266525647959677],"kvk":1.128218556380436,"weight":4.098816625282289,"share":0.03967989684139169},{"tag":"LUni","name":"Latinos Unidos","powerRank":16,"power":1826057488,"members":77,"eligible":71,"excludedInactive":6,"excludedLowLevel":0,"levelBands":[10,55,6,0],"medianLevel":22,"medianActivity":465,"medianGrowth":1920352,"pLevel":0.38713420876133997,"pAct":0.36745031593067173,"pGrowth":0.46753175720057877,"quality":0.40838398822433963,"sizeFactor":8.426149773176359,"kvkDrops":[0.10940592582802462,0.1823692414336119],"kvk":1.1802310122738848,"weight":4.061298424109357,"share":0.03931668997260088},{"tag":"CROW","name":"Corvus","powerRank":18,"power":1637963440,"members":81,"eligible":64,"excludedInactive":15,"excludedLowLevel":2,"levelBands":[12,44,8,0],"medianLevel":21,"medianActivity":520,"medianGrowth":2059048,"pLevel":0.344234609962406,"pAct":0.45822074718045114,"pGrowth":0.48536907697520765,"quality":0.4335268214432024,"sizeFactor":8.0,"kvkDrops":[0.12527349459907683,0.09137870210052],"kvk":1.1495224997304245,"weight":3.9867906838846037,"share":0.03859539411667812},{"tag":"EOS","name":"Eclipse of Shadows","powerRank":17,"power":1767478412,"members":70,"eligible":57,"excludedInactive":10,"excludedLowLevel":3,"levelBands":[3,39,14,1],"medianLevel":22,"medianActivity":520,"medianGrowth":1886980,"pLevel":0.49505891922789425,"pAct":0.49188211757463834,"pGrowth":0.4358423610597032,"quality":0.4732212432903878,"sizeFactor":7.54983443527075,"kvkDrops":[0.04600602103480812,0.1067137240606313],"kvk":1.1039951517675533,"weight":3.9442898885734565,"share":0.0381839516619898},{"tag":"OGN","name":"*nodiscordneededOG*","powerRank":15,"power":1863313815,"members":88,"eligible":80,"excludedInactive":7,"excludedLowLevel":1,"levelBands":[19,53,8,0],"medianLevel":21,"medianActivity":500,"medianGrowth":1327832,"pLevel":0.33002819548872175,"pAct":0.43954025689223053,"pGrowth":0.37924798624661077,"quality":0.38558434374521094,"sizeFactor":8.94427190999916,"kvkDrops":[0.0,0.09717037045534672],"kvk":1.0647802469702312,"weight":3.6721834657275654,"share":0.03554973896708509},{"tag":"BRA","name":"BRASIL","powerRank":22,"power":1340288405,"members":69,"eligible":56,"excludedInactive":8,"excludedLowLevel":5,"levelBands":[17,29,10,0],"medianLevel":22,"medianActivity":505,"medianGrowth":1898601,"pLevel":0.36213860544217685,"pAct":0.43645385785893304,"pGrowth":0.44303050096137586,"quality":0.41646110721976115,"sizeFactor":7.483314773547883,"kvkDrops":[0.09832746788319727,0.1462523098591737],"kvk":1.1694445715173678,"weight":3.644585182656979,"share":0.03528256501778333},{"tag":"PTBR","name":"BrasilxPortugal","powerRank":20,"power":1570230382,"members":99,"eligible":60,"excludedInactive":36,"excludedLowLevel":3,"levelBands":[15,38,7,0],"medianLevel":21,"medianActivity":445,"medianGrowth":2349816,"pLevel":0.3404500835421888,"pAct":0.34443400167084376,"pGrowth":0.4995437835279902,"quality":0.3975272498822485,"sizeFactor":7.745966692414834,"kvkDrops":[0.0828416367069787,0.13699287078956884],"kvk":1.1516002110569854,"weight":3.546045184885105,"share":0.034328617255831514},{"tag":"CiK","name":"Winterfell","powerRank":19,"power":1585586178,"members":84,"eligible":49,"excludedInactive":31,"excludedLowLevel":4,"levelBands":[7,31,11,0],"medianLevel":22,"medianActivity":495,"medianGrowth":1979554,"pLevel":0.4154518950437318,"pAct":0.42960078768349447,"pGrowth":0.4330904956745966,"quality":0.4265775176884514,"sizeFactor":7.0,"kvkDrops":[0.0,0.1395653823357819],"kvk":1.0930435882238547,"weight":3.263874744128669,"share":0.03159697663745321}],"regions":[{"id":1001,"name":"Старый дуб","nameEn":"Old Oak","tier":1,"anchor":[46,46],"room":45,"bonus":{"label":"Дерево","value":5},"d":"M91,124L91,0L0,0L0,124Z","value":1.0},{"id":1002,"name":"Гравийный склон","nameEn":"Gravel Slope","tier":1,"anchor":[134,43],"room":42,"bonus":{"label":"Зерно","value":5},"d":"M177,116L177,0L91,0L91,138L148,138L148,116Z","value":1.0},{"id":1003,"name":"Город Виндмилл","nameEn":"Windmill Town","tier":1,"anchor":[250,46],"room":45,"bonus":{"label":"Дерево","value":5},"d":"M297,109L297,0L177,0L177,89L236,89L236,109Z","value":1.0},{"id":1004,"name":"Гипсовая стена","nameEn":"Plaster Wall","tier":1,"anchor":[479,81],"room":58,"bonus":{"label":"Зерно","value":5},"d":"M550,113L550,0L453,0L453,27L420,27L420,139L435,139L435,146L527,146L527,113Z","value":1.0},{"id":1005,"name":"Гнездо ворона","nameEn":"Raven's Nest","tier":1,"anchor":[650,52],"room":50,"bonus":{"label":"Зерно","value":5},"d":"M701,148L701,0L550,0L550,102L649,102L649,148Z","value":1.0},{"id":1006,"name":"Лазурный склон","nameEn":"Azure Slope","tier":1,"anchor":[741,40],"room":39,"bonus":{"label":"Дерево","value":5},"d":"M815,80L815,0L701,0L701,148L738,148L738,80Z","value":1.0},{"id":1007,"name":"Пшеничный сноп","nameEn":"Wheat Sheaf","tier":1,"anchor":[881,38],"room":37,"bonus":{"label":"Зерно","value":5},"d":"M954,35L954,0L815,0L815,46L844,46L844,100L903,100L903,67L923,67L923,35Z","value":1.0},{"id":1008,"name":"Город Стоунбрук","nameEn":"Stonebrook Town","tier":1,"anchor":[958,89],"room":40,"bonus":{"label":"Дерево","value":5},"d":"M999,130L999,0L954,0L954,35L923,35L923,67L903,67L903,130Z","value":1.0},{"id":1009,"name":"Оленья тропа","nameEn":"Deer Trail","tier":1,"anchor":[958,208],"room":41,"bonus":{"label":"Зерно","value":5},"d":"M999,262L999,130L919,130L919,193L887,193L887,239L931,239L931,290L976,290L976,262Z","value":1.0},{"id":1010,"name":"Разбитый плацдарм","nameEn":"Shattered Bridgehead","tier":1,"anchor":[287,160],"room":50,"bonus":{"label":"Дерево","value":5},"d":"M372,226L372,109L236,109L236,211L345,211L345,226Z","value":1.0},{"id":1011,"name":"Опаловая шахта","nameEn":"Opal Mine","tier":1,"anchor":[42,166],"room":41,"bonus":{"label":"Зерно","value":5},"d":"M148,207L148,138L91,138L91,124L0,124L0,255L47,255L47,207Z","value":1.0},{"id":1012,"name":"Красные пустоши","nameEn":"Red Wastes","tier":1,"anchor":[134,257],"room":46,"bonus":{"label":"Зерно","value":5},"d":"M186,304L186,233L174,233L174,207L47,207L47,255L86,255L86,324L114,324L114,304Z","value":1.0},{"id":1013,"name":"Рыбацкий залив","nameEn":"Fisherman's Bay","tier":1,"anchor":[251,270],"room":39,"bonus":{"label":"Дерево","value":5},"d":"M345,282L345,211L236,211L236,233L186,233L186,309L288,309L288,282Z","value":1.0},{"id":1014,"name":"Березовая роща","nameEn":"Birch Grove","tier":1,"anchor":[842,274],"room":41,"bonus":{"label":"Дерево","value":5},"d":"M931,290L931,239L866,239L866,220L775,220L775,292L804,292L804,322L872,322L872,304L916,304L916,290Z","value":1.0},{"id":1015,"name":"Сосновая роща","nameEn":"Pine Grove","tier":1,"anchor":[958,332],"room":40,"bonus":{"label":"Зерно","value":5},"d":"M999,414L999,262L976,262L976,290L916,290L916,369L941,369L941,414Z","value":1.0},{"id":1016,"name":"Ручей Миллстоун","nameEn":"Millstone Creek","tier":1,"anchor":[43,298],"room":42,"bonus":{"label":"Дерево","value":5},"d":"M86,368L86,255L0,255L0,455L55,455L55,368Z","value":1.0},{"id":1017,"name":"Вороний клюв","nameEn":"Crow's Beak","tier":1,"anchor":[95,416],"room":38,"bonus":{"label":"Зерно","value":5},"d":"M165,455L165,409L140,409L140,384L117,384L117,368L55,368L55,455Z","value":1.0},{"id":1018,"name":"Родник","nameEn":"Spring","tier":1,"anchor":[949,464],"room":49,"bonus":{"label":"Дерево","value":5},"d":"M999,531L999,414L941,414L941,401L895,401L895,505L921,505L921,531Z","value":1.0},{"id":1019,"name":"Мшистый утес","nameEn":"Mossy Cliff","tier":1,"anchor":[934,611],"room":52,"bonus":{"label":"Дерево","value":5},"d":"M999,649L999,531L921,531L921,559L881,559L881,670L970,670L970,649Z","value":1.0},{"id":1020,"name":"Лисья нора","nameEn":"Fox Den","tier":1,"anchor":[51,506],"room":50,"bonus":{"label":"Зерно","value":5},"d":"M101,550L101,455L0,455L0,579L80,579L80,550Z","value":1.0},{"id":1021,"name":"Кленовая деревня","nameEn":"Maple Village","tier":1,"anchor":[36,615],"room":35,"bonus":{"label":"Дерево","value":5},"d":"M71,661L71,579L0,579L0,707L33,707L33,661Z","value":1.0},{"id":1022,"name":"Долина Грейвулф","nameEn":"Greywolf Valley","tier":1,"anchor":[107,615],"room":35,"bonus":{"label":"Зерно","value":5},"d":"M172,642L172,579L71,579L71,661L131,661L131,642Z","value":1.0},{"id":1023,"name":"Деревня Миствейл","nameEn":"Mistvale Village","tier":1,"anchor":[844,781],"room":43,"bonus":{"label":"Зерно","value":5},"d":"M893,811L893,737L800,737L800,833L875,833L875,811Z","value":1.0},{"id":1024,"name":"Дом из красного кирпича","nameEn":"Red Brick House","tier":1,"anchor":[956,714],"room":43,"bonus":{"label":"Зерно","value":5},"d":"M999,784L999,649L970,649L970,670L912,670L912,737L893,737L893,773L924,773L924,784Z","value":1.0},{"id":1025,"name":"Шишечный рынок","nameEn":"Pinecone Market","tier":1,"anchor":[942,828],"room":43,"bonus":{"label":"Зерно","value":5},"d":"M999,872L999,784L924,784L924,773L893,773L893,811L875,811L875,852L905,852L905,872Z","value":1.0},{"id":1026,"name":"Налетчик","nameEn":"Raider","tier":1,"anchor":[605,883],"room":42,"bonus":{"label":"Дерево","value":5},"d":"M670,925L670,857L638,857L638,832L581,832L581,847L547,847L547,867L506,867L506,925Z","value":1.0},{"id":1027,"name":"Капающая пещера","nameEn":"Dripping Cave","tier":1,"anchor":[473,844],"room":40,"bonus":{"label":"Дерево","value":5},"d":"M547,867L547,823L523,823L523,803L419,803L419,862L436,862L436,907L412,907L412,927L506,927L506,867Z","value":1.0},{"id":1028,"name":"Старая мельница","nameEn":"Old Mill","tier":1,"anchor":[142,809],"room":40,"bonus":{"label":"Дерево","value":5},"d":"M182,849L182,716L107,716L107,787L83,787L83,849Z","value":1.0},{"id":1029,"name":"Орлиный пик","nameEn":"Eagle Peak","tier":1,"anchor":[43,773],"room":42,"bonus":{"label":"Дерево","value":5},"d":"M107,787L107,730L33,730L33,707L0,707L0,886L83,886L83,787Z","value":1.0},{"id":1030,"name":"Сухой колодец","nameEn":"Dry Well","tier":1,"anchor":[261,902],"room":42,"bonus":{"label":"Дерево","value":5},"d":"M320,928L320,883L303,883L303,859L244,859L244,838L213,838L213,940L242,940L242,961L296,961L296,928Z","value":1.0},{"id":1031,"name":"Стог сена","nameEn":"Haystack","tier":1,"anchor":[43,954],"room":42,"bonus":{"label":"Зерно","value":5},"d":"M155,999L155,940L83,940L83,886L0,886L0,999Z","value":1.0},{"id":1032,"name":"Рынок Фростлиф","nameEn":"Frostleaf Market","tier":1,"anchor":[185,970],"room":29,"bonus":{"label":"Дерево","value":5},"d":"M296,999L296,961L242,961L242,940L155,940L155,999Z","value":1.0},{"id":1033,"name":"Угольная шахта","nameEn":"Coal Mine","tier":1,"anchor":[355,955],"room":43,"bonus":{"label":"Зерно","value":5},"d":"M412,999L412,927L389,927L389,901L320,901L320,928L296,928L296,999Z","value":1.0},{"id":1034,"name":"Теснина","nameEn":"Gorge","tier":1,"anchor":[448,963],"room":35,"bonus":{"label":"Дерево","value":5},"d":"M535,999L535,949L506,949L506,927L412,927L412,999Z","value":1.0},{"id":1035,"name":"Раковина улитки","nameEn":"Snail Shell","tier":1,"anchor":[572,962],"room":36,"bonus":{"label":"Дерево","value":5},"d":"M654,999L654,925L506,925L506,949L535,949L535,999Z","value":1.0},{"id":1036,"name":"Ежевичная чаща","nameEn":"Bramble Thicket","tier":1,"anchor":[694,960],"room":39,"bonus":{"label":"Дерево","value":5},"d":"M778,999L778,941L763,941L763,920L670,920L670,925L654,925L654,999Z","value":1.0},{"id":1037,"name":"Павильон светильников","nameEn":"Lantern Pavilion","tier":1,"anchor":[839,958],"room":40,"bonus":{"label":"Зерно","value":5},"d":"M921,999L921,977L905,977L905,917L801,917L801,941L778,941L778,999Z","value":1.0},{"id":1038,"name":"Воющая долина","nameEn":"Howling Valley","tier":1,"anchor":[952,919],"room":46,"bonus":{"label":"Дерево","value":5},"d":"M999,999L999,872L905,872L905,977L921,977L921,999Z","value":1.0},{"id":2001,"name":"Медная улица","nameEn":"Copper Street","tier":2,"anchor":[352,55],"room":54,"bonus":{"label":"Скорость сбора зерна","value":5},"d":"M453,27L453,0L297,0L297,109L372,109L372,139L420,139L420,27Z","value":2.0},{"id":2002,"name":"Город Анвил","nameEn":"Anvil Town","tier":2,"anchor":[851,182],"room":38,"bonus":{"label":"Трава","value":5},"d":"M919,193L919,130L903,130L903,100L844,100L844,144L800,144L800,220L866,220L866,239L887,239L887,193Z","value":2.6},{"id":2003,"name":"Сейлпорт","nameEn":"Sailport","tier":2,"anchor":[775,117],"room":36,"bonus":{"label":"Трава","value":5},"d":"M844,144L844,46L815,46L815,80L738,80L738,148L718,148L718,187L800,187L800,144Z","value":2.6},{"id":2004,"name":"Рынок Стоунчант","nameEn":"Stonechant Market","tier":2,"anchor":[606,146],"room":43,"bonus":{"label":"Скорость сбора зерна","value":5},"d":"M672,186L672,148L649,148L649,102L550,102L550,113L527,113L527,186L591,186L591,200L622,200L622,186Z","value":2.0},{"id":2005,"name":"Вайолет","nameEn":"Violet","tier":2,"anchor":[508,214],"room":33,"bonus":{"label":"Трава","value":5},"d":"M564,230L564,186L527,186L527,146L435,146L435,205L474,205L474,254L537,254L537,230Z","value":2.6},{"id":2006,"name":"Город Вайтстоун","nameEn":"Whitestone Town","tier":2,"anchor":[192,158],"room":43,"bonus":{"label":"Скорость сбора зерна","value":5},"d":"M236,233L236,89L177,89L177,116L148,116L148,207L174,207L174,233Z","value":2.0},{"id":2007,"name":"Янтарная дорога","nameEn":"Amber Road","tier":2,"anchor":[411,237],"room":39,"bonus":{"label":"Трава","value":5},"d":"M474,276L474,205L435,205L435,139L372,139L372,226L345,226L345,276Z","value":2.6},{"id":2008,"name":"Город Твинспайр","nameEn":"Twinspire Town","tier":2,"anchor":[729,233],"room":45,"bonus":{"label":"Скорость сбора зерна","value":5},"d":"M800,220L800,187L718,187L718,148L672,148L672,186L667,186L667,263L694,263L694,292L775,292L775,220Z","value":2.0},{"id":2009,"name":"Рынок Виндспайр","nameEn":"Windspire Market","tier":2,"anchor":[874,365],"room":41,"bonus":{"label":"Скорость сбора зерна","value":5},"d":"M941,401L941,369L916,369L916,304L872,304L872,322L822,322L822,360L805,360L805,406L868,406L868,421L895,421L895,401Z","value":2.0},{"id":2010,"name":"Город Голдгрейн","nameEn":"Goldgrain Town","tier":2,"anchor":[151,345],"room":40,"bonus":{"label":"Трава","value":5},"d":"M238,354L238,309L186,309L186,304L114,304L114,324L86,324L86,368L117,368L117,384L140,384L140,409L183,409L183,372L201,372L201,354Z","value":2.6},{"id":2011,"name":"Водопад нимф","nameEn":"Nymph Falls","tier":2,"anchor":[832,609],"room":49,"bonus":{"label":"Скорость сбора зерна","value":5},"d":"M881,660L881,559L779,559L779,647L800,647L800,660Z","value":2.0},{"id":2012,"name":"Жаворонковый переулок","nameEn":"Lark Lane","tier":2,"anchor":[141,495],"room":38,"bonus":{"label":"Трава","value":5},"d":"M220,517L220,470L209,470L209,455L101,455L101,550L80,550L80,579L172,579L172,517Z","value":2.6},{"id":2013,"name":"Паром Черноводья","nameEn":"Blackwater Ferry","tier":2,"anchor":[632,778],"room":37,"bonus":{"label":"Скорость сбора зерна","value":5},"d":"M699,776L699,727L601,727L601,755L575,755L575,788L595,788L595,832L670,832L670,776Z","value":2.0},{"id":2014,"name":"Сад роз","nameEn":"Rose Garden","tier":2,"anchor":[740,768],"room":40,"bonus":{"label":"Трава","value":5},"d":"M800,809L800,727L699,727L699,776L670,776L670,809Z","value":2.6},{"id":2015,"name":"Город Грейтвуд","nameEn":"Greatwood Town","tier":2,"anchor":[839,699],"room":38,"bonus":{"label":"Трава","value":5},"d":"M912,737L912,670L881,670L881,660L800,660L800,737Z","value":2.6},{"id":2016,"name":"Долина Стагколл","nameEn":"Stagcall Valley","tier":2,"anchor":[839,876],"room":41,"bonus":{"label":"Скорость сбора зерна","value":5},"d":"M905,917L905,852L875,852L875,833L800,833L800,860L779,860L779,883L735,883L735,920L763,920L763,941L801,941L801,917Z","value":2.0},{"id":2017,"name":"Маячный пункт","nameEn":"Lighthouse Post","tier":2,"anchor":[711,851],"room":40,"bonus":{"label":"Скорость сбора зерна","value":5},"d":"M800,860L800,809L670,809L670,832L638,832L638,857L670,857L670,920L735,920L735,883L779,883L779,860Z","value":2.0},{"id":2018,"name":"Город Айронгейт","nameEn":"Irongate Town","tier":2,"anchor":[374,856],"room":45,"bonus":{"label":"Трава","value":5},"d":"M436,907L436,862L419,862L419,803L335,803L335,832L303,832L303,883L320,883L320,901L389,901L389,927L412,927L412,907Z","value":2.6},{"id":2019,"name":"Двор роз","nameEn":"Rose Court","tier":2,"anchor":[269,644],"room":32,"bonus":{"label":"Трава","value":5},"d":"M318,675L318,622L293,622L293,599L247,599L247,619L235,619L235,664L194,664L194,705L182,705L182,733L254,733L254,700L279,700L279,675Z","value":2.6},{"id":2020,"name":"Дорога звездной пыли","nameEn":"Stardust Road","tier":2,"anchor":[229,791],"room":46,"bonus":{"label":"Трава","value":5},"d":"M303,859L303,803L284,803L284,751L254,751L254,733L182,733L182,838L244,838L244,859Z","value":2.6},{"id":2021,"name":"Гавань Сейлшадоу","nameEn":"Sailshadow Harbor","tier":2,"anchor":[68,696],"room":34,"bonus":{"label":"Скорость сбора зерна","value":5},"d":"M194,705L194,664L172,664L172,642L131,642L131,661L33,661L33,730L107,730L107,716L182,716L182,705Z","value":2.0},{"id":2022,"name":"Город Эхо","nameEn":"Echo Town","tier":2,"anchor":[129,895],"room":45,"bonus":{"label":"Трава","value":5},"d":"M213,940L213,838L182,838L182,849L83,849L83,940Z","value":2.6},{"id":3001,"name":"Башня суховея","nameEn":"Dry Wind Tower","tier":3,"anchor":[599,235],"room":33,"bonus":{"label":"Трава","value":10},"d":"M667,263L667,186L622,186L622,200L591,200L591,186L564,186L564,230L537,230L537,280L559,280L559,305L575,305L575,320L617,320L617,263Z","value":5.2},{"id":3002,"name":"Город Айронволл","nameEn":"Ironwall Town","tier":3,"anchor":[768,342],"room":41,"bonus":{"label":"Зерно","value":10},"d":"M822,360L822,322L804,322L804,292L694,292L694,335L726,335L726,406L805,406L805,360Z","value":4.0},{"id":3003,"name":"Соколиная крепость","nameEn":"Falcon Keep","tier":3,"anchor":[404,308],"room":30,"bonus":{"label":"Трава","value":10},"d":"M468,319L468,276L345,276L345,325L378,325L378,355L433,355L433,319Z","value":5.2},{"id":3004,"name":"Город Дипмир","nameEn":"Deepmere Town","tier":3,"anchor":[310,339],"room":36,"bonus":{"label":"Трава","value":10},"d":"M378,375L378,325L345,325L345,282L288,282L288,309L238,309L238,375Z","value":5.2},{"id":3005,"name":"Ветреные высоты","nameEn":"Windy Heights","tier":3,"anchor":[225,415],"room":41,"bonus":{"label":"Дерево","value":10},"d":"M291,455L291,375L238,375L238,354L201,354L201,372L183,372L183,409L165,409L165,455L209,455L209,470L233,470L233,455Z","value":4.0},{"id":3006,"name":"Город Холиспринг","nameEn":"Holyspring Town","tier":3,"anchor":[824,444],"room":37,"bonus":{"label":"Зерно","value":10},"d":"M895,479L895,421L868,421L868,406L786,406L786,462L763,462L763,500L837,500L837,479Z","value":4.0},{"id":3007,"name":"Роща Сильверлиф","nameEn":"Silverleaf Grove","tier":3,"anchor":[865,524],"room":35,"bonus":{"label":"Зерно","value":10},"d":"M921,559L921,505L895,505L895,479L837,479L837,500L779,500L779,559Z","value":4.0},{"id":3008,"name":"Врата бури","nameEn":"Storm Gate","tier":3,"anchor":[210,555],"room":37,"bonus":{"label":"Дерево","value":10},"d":"M266,564L266,517L172,517L172,664L235,664L235,619L247,619L247,564Z","value":4.0},{"id":3009,"name":"Лагерь морозного волка","nameEn":"Frost Wolf Camp","tier":3,"anchor":[739,687],"room":39,"bonus":{"label":"Зерно","value":10},"d":"M800,727L800,647L703,647L703,669L646,669L646,727Z","value":4.0},{"id":3010,"name":"Река Стиллвотер","nameEn":"Stillwater River","tier":3,"anchor":[463,773],"room":29,"bonus":{"label":"Зерно","value":10},"d":"M595,832L595,788L575,788L575,755L526,755L526,743L433,743L433,803L523,803L523,823L547,823L547,847L581,847L581,832Z","value":4.0},{"id":3011,"name":"Прибрежная цитадель","nameEn":"Coastal Citadel","tier":3,"anchor":[396,737],"room":37,"bonus":{"label":"Дерево","value":10},"d":"M433,803L433,693L401,693L401,699L338,699L338,724L358,724L358,803Z","value":4.0},{"id":3012,"name":"Небесные высоты","nameEn":"Sky Heights","tier":3,"anchor":[321,757],"room":36,"bonus":{"label":"Дерево","value":10},"d":"M358,803L358,724L338,724L338,675L279,675L279,700L254,700L254,751L284,751L284,803L303,803L303,832L335,832L335,803Z","value":4.0},{"id":4001,"name":"Рассветная твердыня","nameEn":"Dawn Stronghold","tier":4,"anchor":[513,318],"room":44,"bonus":{"label":"Скорость сбора зерна","value":15},"d":"M575,362L575,305L559,305L559,280L537,280L537,254L474,254L474,276L468,276L468,319L433,319L433,355L473,355L473,383L511,383L511,362Z","value":7.0},{"id":4002,"name":"Вечный пик","nameEn":"Eternal Peak","tier":4,"anchor":[688,436],"room":48,"bonus":{"label":"Скорость сбора зерна","value":15},"d":"M786,462L786,406L726,406L726,386L638,386L638,485L763,485L763,462Z","value":7.0},{"id":4003,"name":"Мифриловый зал","nameEn":"Mithril Hall","tier":4,"anchor":[717,609],"room":38,"bonus":{"label":"Дерево","value":15},"d":"M779,647L779,570L678,570L678,628L625,628L625,684L646,684L646,669L703,669L703,647Z","value":7.0},{"id":4004,"name":"Призрачный город","nameEn":"Ghost City","tier":4,"anchor":[300,496],"room":39,"bonus":{"label":"Трава","value":15},"d":"M379,523L379,475L344,475L344,455L233,455L233,470L220,470L220,517L266,517L266,538L329,538L329,523Z","value":9.1},{"id":4005,"name":"Крепость Сендвинд","nameEn":"Sandwind Fortress","tier":4,"anchor":[315,573],"room":34,"bonus":{"label":"Трава","value":15},"d":"M379,572L379,523L329,523L329,538L266,538L266,564L247,564L247,599L293,599L293,622L346,622L346,586L368,586L368,572Z","value":9.1},{"id":4006,"name":"Изумрудный город","nameEn":"Emerald City","tier":4,"anchor":[487,704],"room":39,"bonus":{"label":"Скорость сбора зерна","value":15},"d":"M535,669L535,645L479,645L479,586L459,586L459,675L433,675L433,743L526,743L526,669Z","value":7.0},{"id":4007,"name":"Город Санспайр","nameEn":"Sunspire Town","tier":4,"anchor":[568,702],"room":41,"bonus":{"label":"Скорость сбора зерна","value":15},"d":"M646,727L646,684L625,684L625,660L535,660L535,669L526,669L526,755L601,755L601,727Z","value":7.0},{"id":5001,"name":"Храм природы","nameEn":"Temple of Nature","tier":5,"anchor":[653,344],"room":42,"bonus":{"label":"Скорость сбора зерна","value":20},"d":"M726,386L726,335L694,335L694,263L617,263L617,320L575,320L575,362L614,362L614,386Z","value":11.0},{"id":5002,"name":"Храм порядка","nameEn":"Temple of Order","tier":5,"anchor":[408,387],"room":31,"bonus":{"label":"Трава","value":20},"d":"M473,418L473,355L378,355L378,375L291,375L291,455L344,455L344,418Z","value":14.3},{"id":5003,"name":"Храм войны","nameEn":"Temple of War","tier":5,"anchor":[678,528],"room":42,"bonus":{"label":"Зерно","value":20},"d":"M779,570L779,500L763,500L763,485L638,485L638,510L609,510L609,599L625,599L625,628L678,628L678,570Z","value":11.0},{"id":5004,"name":"Храм хаоса","nameEn":"Temple of Chaos","tier":5,"anchor":[379,654],"room":45,"bonus":{"label":"Дерево","value":20},"d":"M459,675L459,615L402,615L402,572L368,572L368,586L346,586L346,622L318,622L318,675L338,675L338,699L401,699L401,693L433,693L433,675Z","value":11.0},{"id":6001,"name":"Крепость львиного сердца","nameEn":"Lionheart Fortress","tier":6,"anchor":[593,427],"room":45,"bonus":{"label":"Скорость обучения","value":5},"d":"M638,510L638,386L614,386L614,362L511,362L511,383L473,383L473,447L552,447L552,493L592,493L592,510Z","value":12.8},{"id":6002,"name":"Крепость сумерек","nameEn":"Twilight Fortress","tier":6,"anchor":[564,609],"room":46,"bonus":{"label":"Скорость исследований","value":20},"d":"M625,660L625,599L609,599L609,510L592,510L592,493L552,493L552,552L523,552L523,586L479,586L479,645L535,645L535,660Z","value":20.8},{"id":6003,"name":"Небесная крепость","nameEn":"Sky Fortress","tier":6,"anchor":[410,455],"room":36,"bonus":{"label":"Скорость строительства","value":20},"d":"M523,586L523,552L447,552L447,447L473,447L473,418L344,418L344,475L379,475L379,572L402,572L402,615L459,615L459,586Z","value":20.8},{"id":9999,"name":"Королевский город","nameEn":"Royal City","tier":null,"anchor":[500,500],"room":52,"bonus":null,"d":"M552,552L552,447L447,447L447,552Z","value":null}],"alloc":{"A":{"alliances":{"REG":{"cities":[6002,5003,4003,4006,3006,3007],"value":53.8,"route":{"transit":1,"captures":7,"days":[[["take",1018],["take",3006],["drop",1018],["take",3007]],[["take",5003],["take",4003],["take",6002]],[["take",4006]]]}},"IRON":{"cities":[6003,5002,4004,3003,3004,3005],"value":58.6,"route":{"transit":1,"captures":7,"days":[[["take",1013],["take",3003],["drop",1013],["take",3004]],[["take",3005],["take",4004],["take",5002]],[["take",6003]]]}},"PHN":{"cities":[6001,5001,4001,4002,3001,3002],"value":47.0,"route":{"transit":1,"captures":7,"days":[[["take",1014],["take",3002],["drop",1014],["take",5001]],[["take",3001],["take",4001],["take",4002]],[["take",6001]]]}},"GOD":{"cities":[5004,4005,3011,1027,1034],"value":26.1,"route":{"transit":0,"captures":5,"days":[[["take",1027],["take",1034],["take",3011]],[["take",5004],["take",4005]]]}},"KTK":{"cities":[4007,3009,2011,2013,2015],"value":17.6,"route":{"transit":1,"captures":6,"days":[[["take",1019],["take",2011],["drop",1019],["take",3009]],[["take",2013],["take",2015],["take",4007]]]}},"POH":{"cities":[3008,3012,2019,2021,1022],"value":13.6,"route":{"transit":0,"captures":5,"days":[[["take",1022],["take",2021],["take",2019]],[["take",3008],["take",3012]]]}},"RPL":{"cities":[3010,2014,2017,1026],"value":9.6,"route":{"transit":0,"captures":4,"days":[[["take",1026],["take",2017],["take",2014]],[["take",3010]]]}},"KNG":{"cities":[2002,2003,2009,1014],"value":8.2,"route":{"transit":0,"captures":4,"days":[[["take",1014],["take",2002],["take",2003]],[["take",2009]]]}},"MDNT":{"cities":[2004,2005,2007,2008],"value":9.2,"route":{"transit":1,"captures":5,"days":[[["take",1004],["take",2004],["drop",1004],["take",2005]],[["take",2007],["take",2008]]]}},"Asp":{"cities":[2018,2020,1030,1033],"value":7.2,"route":{"transit":0,"captures":4,"days":[[["take",1030],["take",1033],["take",2018]],[["take",2020]]]}},"SyE":{"cities":[2012,1016,1017,1020],"value":5.6,"route":{"transit":0,"captures":4,"days":[[["take",1016],["take",1017],["take",1020]],[["take",2012]]]}},"SWA":{"cities":[2010,1010,1012,1013],"value":5.6,"route":{"transit":0,"captures":4,"days":[[["take",1010],["take",1012],["take",1013]],[["take",2010]]]}},"COT":{"cities":[2001,1002,1003,1004],"value":5.0,"route":{"transit":0,"captures":4,"days":[[["take",1002],["take",1003],["take",1004]],[["take",2001]]]}},"Ukr":{"cities":[1005,1006,1007,1008],"value":4.0,"route":{"transit":0,"captures":4,"days":[[["take",1005],["take",1006],["take",1007]],[["take",1008]]]}},"LUni":{"cities":[2022,1031,1032],"value":4.6,"route":{"transit":0,"captures":3,"days":[[["take",1031],["take",1032],["take",2022]]]}},"CROW":{"cities":[2016,1035,1036],"value":4.0,"route":{"transit":0,"captures":3,"days":[[["take",1035],["take",1036],["take",2016]]]}},"EOS":{"cities":[2006,1001,1011],"value":4.0,"route":{"transit":0,"captures":3,"days":[[["take",1001],["take",1011],["take",2006]]]}},"OGN":{"cities":[1019,1023,1024],"value":3.0,"route":{"transit":0,"captures":3,"days":[[["take",1019],["take",1023],["take",1024]]]}},"BRA":{"cities":[1021,1028,1029],"value":3.0,"route":{"transit":0,"captures":3,"days":[[["take",1021],["take",1028],["take",1029]]]}},"PTBR":{"cities":[1009,1015,1018],"value":3.0,"route":{"transit":0,"captures":3,"days":[[["take",1009],["take",1015],["take",1018]]]}},"CiK":{"cities":[1025,1037,1038],"value":3.0,"route":{"transit":0,"captures":3,"days":[[["take",1025],["take",1037],["take",1038]]]}}}}}};
+
+const PALETTE = ['#d64545','#2f9e55','#3b6fd8','#e07b22','#8e44ad','#1fa3a8','#d63fa3','#7cae1e','#c99a06','#0f766e',
+  '#8b5a2b','#9b1c31','#4f8a8b','#283593','#6d7a16','#e86a92','#5e9bf0','#a0522d','#6a4c93','#1982c4','#b33939'];
+
+const T = {
+  ru: {
+    title: 'Сервер 337 — распределение городов', sub: d => `Данные lastasylum.gg на ${d}`,
+    intro: 'Предложение по распределению 86 регионов сервера (без Королевского города) между 20 сильнейшими по мощи альянсами и [BRA] BRASIL. Чем выше вес альянса, тем больше у него городов и тем выше их тир. Выберите альянс, чтобы увидеть его города и пошаговый план захвата.',
+    variant: v => `Вариант ${v === 'A' ? 'А' : 'Б'}`, all: 'Все альянсы', pick: 'Выберите альянс, чтобы увидеть план захвата.',
+    overview: 'Обзор', cities: 'Города', plan: 'План захвата', day: n => `День ${n}`,
+    take: 'Взять', drop: 'Сбросить', transit: 'транзит', start: 'Старт', prev: '← Назад', next: 'Вперёд →', reset: 'Итог',
+    planNote: (c, t, d) => `${c} захватов, из них ${t} транзитных, ${d} дн. Транзитный город берут только ради соседства и сразу сбрасывают.`,
+    dropNote: 'Между двумя сбросами — не меньше часа.',
+    lgHeld: 'Удерживается', lgTarget: 'Цель (ещё не взята)', lgTransit: 'Транзит', lgDropped: 'Сброшен', lgCur: 'Текущий шаг', lgRoyal: 'Королевский город',
+    tipOwner: 'Альянс', tipBonus: 'Бонус', tipValue: 'Ценность',
+    hResults: 'Итоговое распределение', hData: 'Данные по альянсам', hMethod: 'Методология',
+    cols: { rank: '#', tag: 'Альянс', weight: 'Вес', share: 'Доля', count: 'Городов', tiers: 'Тиры', value: 'Ценность', target: 'Цель по доле', days: 'Дней', transit: 'Транзит',
+      power: 'Мощь', powerRank: '# мощи', members: 'Состав', eligible: 'В расчёте', inactive: 'Неакт.', low: 'Ур. <15',
+      bands: 'Уровни 15–19 / 20–23 / 24–27 / 28–30', mLevel: 'Мед. ур.', mAct: 'Мед. акт.', mGrowth: 'Мед. прирост 7д',
+      pLevel: 'Уровень', pAct: 'Активность', pGrowth: 'Прирост', quality: 'Качество', size: '√N', kvk1: 'КвК 10.10', kvk2: 'КвК 17.10', kvkx: 'КвК ×' },
+    footer: 'Расчёт разовый, по снимку данных. Данные игроков — lastasylum.gg; ники в расчёте не публикуются.',
+    bonus: { wood: 'Дерево', grain: 'Зерно', herb: 'Трава', grainGather: 'Скорость сбора зерна', research: 'Скорость исследований', training: 'Скорость обучения', build: 'Скорость строительства' },
+  },
+  en: {
+    title: 'Server 337 — City Distribution', sub: d => `lastasylum.gg data as of ${d}`,
+    intro: 'A proposal for distributing the 86 regions of the server (Royal City excluded) among the top 20 alliances by power plus [BRA] BRASIL. The higher an alliance’s weight, the more cities it gets and the higher their tier. Pick an alliance to see its cities and a step-by-step capture plan.',
+    variant: v => `Variant ${v}`, all: 'All alliances', pick: 'Pick an alliance to see its capture plan.',
+    overview: 'Overview', cities: 'Cities', plan: 'Capture plan', day: n => `Day ${n}`,
+    take: 'Take', drop: 'Drop', transit: 'transit', start: 'Start', prev: '← Back', next: 'Next →', reset: 'Final',
+    planNote: (c, t, d) => `${c} captures, ${t} of them transit, ${d} day(s). A transit city is taken only to reach a neighbor and is dropped right away.`,
+    dropNote: 'Keep at least one hour between two drops.',
+    lgHeld: 'Held', lgTarget: 'Target (not yet taken)', lgTransit: 'Transit', lgDropped: 'Dropped', lgCur: 'Current step', lgRoyal: 'Royal City',
+    tipOwner: 'Alliance', tipBonus: 'Bonus', tipValue: 'Value',
+    hResults: 'Final distribution', hData: 'Alliance data', hMethod: 'Methodology',
+    cols: { rank: '#', tag: 'Alliance', weight: 'Weight', share: 'Share', count: 'Cities', tiers: 'Tiers', value: 'Value', target: 'Target by share', days: 'Days', transit: 'Transit',
+      power: 'Power', powerRank: 'Power #', members: 'Members', eligible: 'Counted', inactive: 'Inactive', low: 'Lvl <15',
+      bands: 'Levels 15–19 / 20–23 / 24–27 / 28–30', mLevel: 'Med. lvl', mAct: 'Med. act.', mGrowth: 'Med. 7d growth',
+      pLevel: 'Level', pAct: 'Activity', pGrowth: 'Growth', quality: 'Quality', size: '√N', kvk1: 'KvK Oct 10', kvk2: 'KvK Oct 17', kvkx: 'KvK ×' },
+    footer: 'One-off calculation on a data snapshot. Player data from lastasylum.gg; nicknames are not published.',
+    bonus: { wood: 'Wood', grain: 'Grain', herb: 'Herb', grainGather: 'Grain gathering speed', research: 'Research speed', training: 'Training speed', build: 'Construction speed' },
+  },
+};
+
+const METHOD = {
+  ru: `
+<h3>1. Какие альянсы</h3>
+<p>20 сильнейших альянсов сервера 337 по мощи и [BRA] BRASIL (22-е место). Данные: открытые страницы альянсов на lastasylum.gg — по каждому участнику уровень святилища, активность и прирост мощи за 7 дней.</p>
+<h3>2. Кто считается</h3>
+<p>Неактивные игроки (активность 0 или не указана) и игроки ниже 15-го уровня святилища в расчёт не входят — это твинки и брошенные аккаунты, они искажают средние. Остальные игроки всех 21 альянса образуют общий пул — ${'{pool}'} игроков.</p>
+<h3>3. Качество состава: проценты, а не пороги</h3>
+<p>Абсолютные пороги («уровень выше 23», «прирост больше 5 млн») несправедливы к альянсам помладше. Поэтому каждый игрок сравнивается с остальными игроками пула — получает перцентиль от 0 до 1 (0,8 = сильнее 80% пула):</p>
+<ul>
+<li><b>Уровень</b> — перцентиль уровня святилища по всему пулу.</li>
+<li><b>Активность</b> — перцентиль активности по всему пулу.</li>
+<li><b>Прирост</b> — перцентиль прироста мощи за 7 дней <b>внутри своего бэнда уровня</b> (15–19, 20–23, 24–27, 28–30). Игрок 20-го уровня соревнуется в приросте с игроками 20–23, а не с 30-ми.</li>
+</ul>
+<p>Показатель альянса — средний перцентиль его игроков. Качество:</p>
+<span class="formula">Качество = 0,30 × Уровень + 0,35 × Активность + 0,35 × Прирост</span>
+<h3>4. Размер альянса</h3>
+<p>Большой альянс удержит больше, но размер не должен перевешивать качество, поэтому он учитывается через квадратный корень из числа игроков в расчёте: √N.</p>
+<h3>5. КвК</h3>
+<p>КвК прошли 10 и 17 октября. Участие видно по провалу мощи альянса: берётся первая запись дня КвК и минимум за этот и следующий день. Обычный день даёт +2–3%, поэтому провал означает реальные потери в бою. Множитель за каждый КвК растёт плавно, без порога:</p>
+<span class="formula">КвК-множитель = 1 + 0,1 × min(провал / 15%, 1)</span>
+<p>Провал 15% и больше даёт полный бонус ×1,1; за два КвК максимум ×1,21.</p>
+<h3>6. Вес</h3>
+<span class="formula">Вес = Качество × √N × КвК-множитель (за оба КвК)</span>
+<p>Доля альянса — его вес, делённый на сумму весов всех 21 альянса.</p>
+<h3>7. Ценность города</h3>
+<span class="formula">Ценность = база тира × множитель бонуса
+база: T1 = 1, T2 = 2, T3 = 4, T4 = 7, T5 = 11, T6 = 16
+бонус: трава ×1,3; строительство и исследования (T6) ×1,3; обучение 5% (T6) ×0,8; остальные ×1,0</span>
+<p>Суммарная ценность всех 86 городов — ${'{total}'}.</p>
+<h3>8. Распределение</h3>
+<p>Число городов альянса пропорционально его доле: от 1 до 6, все 86 регионов розданы. Какие именно города — решает место альянса по весу: чем выше место, тем ближе к центру и старше тиры. Два жёстких условия:</p>
+<ul>
+<li>сумма «вес × ценность городов» по всем альянсам максимальна — самые ценные города достаются самым тяжёлым альянсам, почти равные по весу альянсы получают почти равные наборы;</li>
+<li>города одного альянса образуют один связный кусок — от центра карты наружу, без разрывов.</li>
+</ul>
+<p>Подбор — имитация отжига (несколько независимых запусков, берётся лучший).</p>
+<h3>9. План захвата</h3>
+<p>Распределение рисуется с чистого листа. Для каждого альянса строится свой независимый маршрут по правилам игры:</p>
+<ul>
+<li>регион тира 1 можно взять без соседства, остальные — только рядом с уже своими;</li>
+<li>одновременно не больше 6 городов, не больше 3 захватов в сутки;</li>
+<li>от города можно отказаться (сброс); между двумя сбросами — не меньше часа, захватывать после сброса можно сразу.</li>
+</ul>
+<p>Если до цели не дотянуться через свои города, маршрут идёт через транзитные: город берут ради соседства и сразу сбрасывают. Перебираются все порядки захвата, выбирается маршрут с минимумом транзита. Транзитный город может быть чужой итоговой целью — его нужно взять до того, как туда придёт хозяин, или договориться.</p>
+<h3>10. Ограничения</h3>
+<ul>
+<li>Снимок данных на одну дату; веса меняются вместе с составами.</li>
+<li>Провал мощи на КвК не отличает «дрался» от «разбили» — засчитывается как участие.</li>
+<li>Маршруты не согласованы между альянсами по времени.</li>
+</ul>`,
+  en: `
+<h3>1. Alliances</h3>
+<p>The top 20 alliances of server 337 by power plus [BRA] BRASIL (ranked 22nd). Data comes from the public alliance pages on lastasylum.gg: sanctuary level, activity and 7-day power growth for every member.</p>
+<h3>2. Who counts</h3>
+<p>Inactive players (activity 0 or missing) and players below sanctuary level 15 are left out: these are alts and abandoned accounts that skew the averages. Everyone else from all 21 alliances forms one pool of ${'{pool}'} players.</p>
+<h3>3. Roster quality: percentiles, not thresholds</h3>
+<p>Absolute thresholds (“level above 23”, “growth above 5M”) are unfair to younger alliances. Instead every player is compared with the rest of the pool and gets a percentile from 0 to 1 (0.8 = stronger than 80% of the pool):</p>
+<ul>
+<li><b>Level</b> — sanctuary level percentile across the whole pool.</li>
+<li><b>Activity</b> — activity percentile across the whole pool.</li>
+<li><b>Growth</b> — 7-day power growth percentile <b>within the player’s level band</b> (15–19, 20–23, 24–27, 28–30). A level-20 player competes on growth with levels 20–23, not with level 30.</li>
+</ul>
+<p>An alliance’s score on each metric is the mean percentile of its players. Quality:</p>
+<span class="formula">Quality = 0.30 × Level + 0.35 × Activity + 0.35 × Growth</span>
+<h3>4. Alliance size</h3>
+<p>A bigger alliance can hold more, but size should not outweigh quality, so it enters as the square root of counted players: √N.</p>
+<h3>5. KvK</h3>
+<p>KvKs took place on October 10 and 17. Participation shows as a dip in alliance power: the first record of the KvK day versus the minimum over that day and the next. A normal day adds 2–3%, so a dip means real combat losses. The multiplier for each KvK grows smoothly, with no cut-off:</p>
+<span class="formula">KvK multiplier = 1 + 0.1 × min(dip / 15%, 1)</span>
+<p>A dip of 15% or more earns the full ×1.1; two KvKs give at most ×1.21.</p>
+<h3>6. Weight</h3>
+<span class="formula">Weight = Quality × √N × KvK multiplier (both KvKs)</span>
+<p>An alliance’s share is its weight divided by the sum of all 21 weights.</p>
+<h3>7. City value</h3>
+<span class="formula">Value = tier base × bonus multiplier
+base: T1 = 1, T2 = 2, T3 = 4, T4 = 7, T5 = 11, T6 = 16
+bonus: herb ×1.3; construction and research (T6) ×1.3; training 5% (T6) ×0.8; others ×1.0</span>
+<p>All 86 cities add up to a value of ${'{total}'}.</p>
+<h3>8. Distribution</h3>
+<p>The number of cities follows the alliance’s share: 1 to 6, all 86 regions handed out. Which cities exactly depends on the alliance’s place by weight: the higher the place, the closer to the center and the higher the tiers. Two hard rules:</p>
+<ul>
+<li>the sum of “weight × city value” over all alliances is as large as possible — the most valuable cities go to the heaviest alliances, and alliances with almost equal weight get almost equal sets;</li>
+<li>an alliance’s cities form one connected piece — from the center of the map outwards, with no gaps.</li>
+</ul>
+<p>The search uses simulated annealing (several independent runs, the best one wins).</p>
+<h3>9. Capture plan</h3>
+<p>The distribution starts from an empty map. Each alliance gets its own independent route under the game rules:</p>
+<ul>
+<li>a tier-1 region can be taken without a shared border, any other only next to your own;</li>
+<li>at most 6 cities at a time and at most 3 captures per day;</li>
+<li>a city can be dropped; keep at least an hour between two drops, capturing right after a drop is fine.</li>
+</ul>
+<p>When a target can’t be reached through your own cities, the route goes through transit cities: taken only to reach a neighbor and dropped right away. All capture orders are tried and the one with the fewest transits wins. A transit city may be another alliance’s final target — take it before its owner arrives, or agree on it.</p>
+<h3>10. Limitations</h3>
+<ul>
+<li>A single data snapshot; weights move as rosters change.</li>
+<li>A KvK power dip can’t tell “fought” from “got crushed” — both count as participation.</li>
+<li>Routes are not coordinated in time between alliances.</li>
+</ul>`,
+};
+
+const BONUS_KEY = { 'Дерево': 'wood', 'Зерно': 'grain', 'Трава': 'herb', 'Скорость сбора зерна': 'grainGather',
+  'Скорость исследований': 'research', 'Скорость обучения': 'training', 'Скорость строительства': 'build' };
+
+const params = new URLSearchParams(location.search);
+let lang = params.get('lang') || ((navigator.language || '').toLowerCase().startsWith('ru') ? 'ru' : 'en');
+if (!T[lang]) lang = 'en';
+let variant = DATA.variants.includes(params.get('variant')) ? params.get('variant') : DATA.variants[0];
+let selected = params.get('a');
+let stepIdx = null; // null = final state
+
+const R = Object.fromEntries(DATA.regions.map(r => [r.id, r]));
+const ALL = DATA.alliances;
+const color = Object.fromEntries(ALL.map((a, i) => [a.tag, PALETTE[i % PALETTE.length]]));
+const t = () => T[lang];
+const fmt = (x, d = 2) => x.toLocaleString(lang === 'ru' ? 'ru-RU' : 'en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
+const big = x => Math.abs(x) >= 1e9 ? fmt(x / 1e9, 2) + (lang === 'ru' ? ' млрд' : 'B') : fmt(x / 1e6, 1) + (lang === 'ru' ? ' млн' : 'M');
+const rname = id => lang === 'ru' ? R[id].name : R[id].nameEn;
+const V = () => DATA.alloc[variant];
+
+function syncUrl() {
+  const p = new URLSearchParams();
+  p.set('lang', lang);
+  if (DATA.variants.length > 1) p.set('variant', variant);
+  if (selected) p.set('a', selected);
+  history.replaceState(null, '', '?' + p.toString());
+}
+
+function owners() {
+  const o = {};
+  for (const [tag, x] of Object.entries(V().alliances)) for (const c of x.cities) o[c] = tag;
+  return o;
+}
+
+function flatSteps(tag) {
+  const out = [];
+  V().alliances[tag].route.days.forEach((day, i) => day.forEach(([kind, id]) => out.push({ day: i + 1, kind, id })));
+  return out;
+}
+
+function stateAt(tag, k) {
+  const held = new Set(), dropped = new Set();
+  const steps = flatSteps(tag);
+  for (let i = 0; i <= k && i < steps.length; i++) {
+    const s = steps[i];
+    if (s.kind === 'take') { held.add(s.id); dropped.delete(s.id); } else { held.delete(s.id); dropped.add(s.id); }
+  }
+  return { held, dropped, cur: k >= 0 ? steps[k]?.id : null };
+}
+
+const svgNS = 'http://www.w3.org/2000/svg';
+function el(name, attrs, parent) {
+  const e = document.createElementNS(svgNS, name);
+  for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
+  if (parent) parent.appendChild(e);
+  return e;
+}
+
+function drawMap() {
+  const svg = document.getElementById('map');
+  svg.innerHTML = '';
+  const own = owners();
+  const defs = el('defs', {}, svg);
+  const gR = el('g', {}, svg), gL = el('g', {}, svg);
+  let st = null, finals = null;
+  if (selected) {
+    finals = new Set(V().alliances[selected].cities);
+    if (stepIdx !== null) st = stateAt(selected, stepIdx);
+  }
+  for (const r of DATA.regions) {
+    const isRoyal = r.tier === null;
+    const tag = own[r.id];
+    const p = el('path', { d: r.d, class: 'region' }, gR);
+    let fill = isRoyal ? 'var(--royal)' : color[tag];
+    if (selected) {
+      if (st) {
+        if (st.held.has(r.id)) {
+          fill = color[selected];
+          if (!finals.has(r.id)) {
+            const id = 'h' + r.id;
+            const pat = el('pattern', { id, width: 10, height: 10, patternUnits: 'userSpaceOnUse', patternTransform: 'rotate(45)' }, defs);
+            el('rect', { width: 10, height: 10, fill: color[selected], 'fill-opacity': .35 }, pat);
+            el('rect', { width: 4, height: 10, fill: color[selected] }, pat);
+            fill = `url(#${id})`;
+          }
+        } else if (st.dropped.has(r.id)) { p.classList.add('dropped'); fill = null; }
+        else if (finals.has(r.id)) { p.classList.add('target'); fill = color[selected]; p.setAttribute('stroke', color[selected]); }
+        else p.classList.add('dim');
+        if (st.cur === r.id) p.classList.add('current');
+      } else if (tag !== selected && !isRoyal) p.classList.add('dim');
+    }
+    if (fill) p.setAttribute('fill', fill);
+    p.addEventListener('mousemove', e => showTip(e, r, tag));
+    p.addEventListener('mouseleave', hideTip);
+    p.addEventListener('click', () => { if (tag) select(tag === selected ? null : tag); });
+
+    const fs = Math.max(9, Math.min(22, r.room * 0.42));
+    const faint = selected && !isRoyal && (st ? !(st.held.has(r.id) || finals.has(r.id) || st.dropped.has(r.id)) : tag !== selected);
+    const top = isRoyal ? (lang === 'ru' ? 'Корол.' : 'Royal') : tag;
+    const a = el('text', { x: r.anchor[0], y: r.anchor[1] - fs * 0.1, class: 'lbl' + (faint ? ' faint' : ''), 'font-size': fs }, gL);
+    a.textContent = top;
+    if (!isRoyal) {
+      const b = el('text', { x: r.anchor[0], y: r.anchor[1] + fs * 0.85, class: 'lbl sub' + (faint ? ' faint' : ''), 'font-size': fs * 0.75 }, gL);
+      b.textContent = 'T' + r.tier;
+    }
+  }
+  const lg = document.getElementById('legend');
+  if (selected && st) {
+    const c = color[selected];
+    lg.innerHTML = `<span><i class="lg" style="background:${c}"></i>${t().lgHeld}</span>
+      <span><i class="lg" style="background:${c};opacity:.3;border:2px dashed ${c}"></i>${t().lgTarget}</span>
+      <span><i class="lg" style="background:repeating-linear-gradient(45deg,${c} 0 3px,transparent 3px 7px)"></i>${t().lgTransit}</span>
+      <span><i class="lg" style="background:var(--neutral);border:1px dashed var(--muted)"></i>${t().lgDropped}</span>
+      <span><i class="lg" style="border:3px solid var(--ink)"></i>${t().lgCur}</span>`;
+  } else lg.innerHTML = `<span><i class="lg" style="background:var(--royal)"></i>${t().lgRoyal}</span>`;
+}
+
+function showTip(e, r, tag) {
+  const tip = document.getElementById('tip');
+  const bonus = r.bonus ? `${t().bonus[BONUS_KEY[r.bonus.label]]} +${r.bonus.value}%` : '';
+  tip.innerHTML = `<b>${rname(r.id)}</b>${r.tier ? ' · T' + r.tier : ''}<br>` +
+    (tag ? `${t().tipOwner}: [${tag}]<br>` : '') + (bonus ? `${t().tipBonus}: ${bonus}<br>` : '') +
+    (r.value ? `${t().tipValue}: ${fmt(r.value, 1)}` : '');
+  tip.style.display = 'block';
+  const x = Math.min(e.clientX + 14, innerWidth - 270);
+  tip.style.left = x + 'px'; tip.style.top = (e.clientY + 14) + 'px';
+}
+function hideTip() { document.getElementById('tip').style.display = 'none'; }
+
+function drawSide() {
+  const side = document.getElementById('side');
+  const rows = ALL.map((a, i) => {
+    const x = V().alliances[a.tag];
+    return `<button class="chip${a.tag === selected ? ' on' : ''}" data-tag="${a.tag}">
+      <i class="sw" style="background:${color[a.tag]}"></i><b>${a.tag}</b><span class="meta">${i + 1} · ${x.cities.length}</span></button>`;
+  }).join('');
+  let html = `<div class="alist">${rows}</div>`;
+  if (!selected) html += `<p class="note">${t().pick}</p>`;
+  else {
+    const a = ALL.find(a => a.tag === selected), x = V().alliances[selected], r = x.route;
+    const finals = new Set(x.cities);
+    html += `<h3><i class="sw" style="display:inline-block;vertical-align:-2px;background:${color[selected]}"></i> [${a.tag}] ${a.name}</h3>`;
+    html += `<p class="note">${t().cities}: ${x.cities.map(c => `${rname(c)} (T${R[c].tier})`).join(', ')}</p>`;
+    html += `<p class="note">${t().planNote(r.captures, r.transit, r.days.length)}</p>`;
+    html += `<div class="nav"><button class="btn" id="bPrev">${t().prev}</button><button class="btn" id="bNext">${t().next}</button><button class="btn" id="bFinal">${t().reset}</button></div>`;
+    html += '<ol class="steps">';
+    let k = 0, drops = 0;
+    r.days.forEach((day, i) => {
+      html += `<li class="day">${t().day(i + 1)}</li>`;
+      for (const [kind, id] of day) {
+        const tr = kind === 'take' && !finals.has(id) ? ` · <i>${t().transit}</i>` : '';
+        if (kind === 'drop') drops++;
+        html += `<li class="step${stepIdx === k ? ' on' : ''}" data-k="${k}"><span class="tag-${kind}">${kind === 'take' ? t().take : t().drop}</span><span>${rname(id)} (T${R[id].tier})${tr}</span></li>`;
+        k++;
+      }
+    });
+    html += '</ol>';
+    if (drops > 1) html += `<p class="note">${t().dropNote}</p>`;
+  }
+  side.innerHTML = html;
+  side.querySelectorAll('.chip').forEach(b => b.onclick = () => select(b.dataset.tag === selected ? null : b.dataset.tag));
+  side.querySelectorAll('.step').forEach(li => li.onclick = () => { stepIdx = +li.dataset.k; render(); });
+  if (selected) {
+    const n = flatSteps(selected).length;
+    document.getElementById('bPrev').onclick = () => { stepIdx = stepIdx === null ? n - 1 : Math.max(-1, stepIdx - 1); render(); };
+    document.getElementById('bNext').onclick = () => { stepIdx = stepIdx === null ? -1 : stepIdx + 1; if (stepIdx >= n) stepIdx = null; render(); };
+    document.getElementById('bFinal').onclick = () => { stepIdx = null; render(); };
+  }
+}
+
+function select(tag) { selected = tag; stepIdx = null; render(); }
+
+function drawTables() {
+  const c = t().cols;
+  const res = document.getElementById('results');
+  res.innerHTML = `<thead><tr><th>${c.rank}</th><th class="l">${c.tag}</th><th>${c.weight}</th><th>${c.share}</th><th>${c.count}</th><th class="l">${c.tiers}</th><th>${c.value}</th><th>${c.transit}</th><th>${c.days}</th></tr></thead><tbody>` +
+    ALL.map((a, i) => {
+      const x = V().alliances[a.tag];
+      const tiers = x.cities.map(id => 'T' + R[id].tier).join(' ');
+      return `<tr data-tag="${a.tag}"${a.tag === selected ? ' class="sel"' : ''}><td>${i + 1}</td><td class="l"><i class="sw" style="display:inline-block;vertical-align:-2px;background:${color[a.tag]}"></i> <b>${a.tag}</b> ${a.name}</td>
+        <td>${fmt(a.weight)}</td><td>${fmt(a.share * 100, 1)}%</td><td>${x.cities.length}</td><td class="l">${tiers}</td>
+        <td>${fmt(x.value, 1)}</td><td>${x.route.transit}</td><td>${x.route.days.length}</td></tr>`;
+    }).join('') + '</tbody>';
+
+  const d = document.getElementById('data');
+  const pc = x => `<span class="bar" style="width:${Math.round(x * 40)}px"></span> ${fmt(x, 2)}`;
+  d.innerHTML = `<thead><tr><th class="l">${c.tag}</th><th>${c.powerRank}</th><th>${c.power}</th><th>${c.members}</th><th>${c.inactive}</th><th>${c.low}</th><th>${c.eligible}</th>
+    <th>${c.bands}</th><th>${c.mLevel}</th><th>${c.mAct}</th><th>${c.mGrowth}</th>
+    <th>${c.pLevel}</th><th>${c.pAct}</th><th>${c.pGrowth}</th><th>${c.quality}</th><th>${c.size}</th><th>${c.kvk1}</th><th>${c.kvk2}</th><th>${c.kvkx}</th><th>${c.weight}</th></tr></thead><tbody>` +
+    ALL.map(a => `<tr data-tag="${a.tag}"${a.tag === selected ? ' class="sel"' : ''}><td class="l"><b>${a.tag}</b></td><td>${a.powerRank}</td><td>${big(a.power)}</td><td>${a.members}</td><td>${a.excludedInactive}</td><td>${a.excludedLowLevel}</td><td>${a.eligible}</td>
+      <td>${a.levelBands.join(' / ')}</td><td>${a.medianLevel}</td><td>${a.medianActivity}</td><td>${big(a.medianGrowth)}</td>
+      <td>${pc(a.pLevel)}</td><td>${pc(a.pAct)}</td><td>${pc(a.pGrowth)}</td><td><b>${fmt(a.quality, 3)}</b></td><td>${fmt(a.sizeFactor, 2)}</td>
+      <td>−${fmt(a.kvkDrops[0] * 100, 0)}%</td><td>−${fmt(a.kvkDrops[1] * 100, 0)}%</td><td>×${fmt(a.kvk, 3)}</td><td><b>${fmt(a.weight)}</b></td></tr>`).join('') + '</tbody>';
+}
+
+function render() {
+  document.documentElement.lang = lang;
+  document.title = lang === 'ru' ? 'Сервер 337: города' : 'Server 337 Cities';
+  document.getElementById('title').innerHTML = `${t().title}<small>${t().sub(new Date(DATA.asOf * 1000).toLocaleDateString(lang === 'ru' ? 'ru-RU' : 'en-GB', { day: 'numeric', month: 'long', year: 'numeric' }))}</small>`;
+  document.getElementById('intro').textContent = t().intro;
+  document.getElementById('hResults').textContent = t().hResults + (DATA.variants.length > 1 ? ' — ' + t().variant(variant) : '');
+  document.getElementById('hData').textContent = t().hData;
+  document.getElementById('hMethod').textContent = t().hMethod;
+  let m = METHOD[lang].replace('{pool}', DATA.poolSize).replace('{total}', fmt(DATA.totalValue, 1));
+  const method = document.getElementById('method');
+  method.innerHTML = m;
+  method.querySelectorAll('[data-variant]').forEach(li => { if (!DATA.variants.includes(li.dataset.variant)) li.remove(); });
+  document.getElementById('footer').textContent = t().footer;
+  document.querySelectorAll('#langSeg button').forEach(b => b.classList.toggle('on', b.dataset.lang === lang));
+  const vs = document.getElementById('variantSeg');
+  vs.style.display = DATA.variants.length > 1 ? '' : 'none';
+  vs.innerHTML = DATA.variants.map(v => `<button data-v="${v}" class="${v === variant ? 'on' : ''}">${t().variant(v)}</button>`).join('');
+  vs.querySelectorAll('button').forEach(b => b.onclick = () => { variant = b.dataset.v; stepIdx = null; render(); });
+  drawMap(); drawSide(); drawTables(); syncUrl();
+  document.querySelectorAll('tbody tr[data-tag]').forEach(tr => tr.onclick = () => select(tr.dataset.tag === selected ? null : tr.dataset.tag));
+}
+
+document.querySelectorAll('#langSeg button').forEach(b => b.onclick = () => { lang = b.dataset.lang; render(); });
+if (selected && !color[selected]) selected = null;
+render();
+</script>
+</body>
+</html>
