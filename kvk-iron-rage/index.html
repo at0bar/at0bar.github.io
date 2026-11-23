@@ -4,20 +4,27 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>KvK IRON vs RAGE</title>
+<script>
+  // Тема ставится до отрисовки, чтобы не мигало
+  try { const th = localStorage.getItem('kvk-theme'); if (th === 'light' || th === 'dark') document.documentElement.dataset.theme = th; } catch (e) {}
+</script>
 <style>
 :root {
+  color-scheme: light;
   --bg: #f6f5f1; --panel: #ffffff; --ink: #1d1f24; --muted: #6a6f78; --line: #e2e0d9; --grid: #ecebe6; --chip: #f0eee8;
   --iron: #2a78d6; --rage: #eb6834;
   --st-fight: #1baf7a; --st-unk: #eda100; --st-hit: #e34948; --st-shield: #9b9a95; --st-none: #d8d6cf;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
+    color-scheme: dark;
     --bg: #15171b; --panel: #1d2026; --ink: #e8e6e1; --muted: #9aa0a9; --line: #2e323a; --grid: #262a31; --chip: #262a31;
     --iron: #3987e5; --rage: #d95926;
     --st-fight: #199e70; --st-unk: #c98500; --st-hit: #e66767; --st-shield: #6f737b; --st-none: #3a3e46;
   }
 }
 :root[data-theme="dark"] {
+  color-scheme: dark;
   --bg: #15171b; --panel: #1d2026; --ink: #e8e6e1; --muted: #9aa0a9; --line: #2e323a; --grid: #262a31; --chip: #262a31;
   --iron: #3987e5; --rage: #d95926;
   --st-fight: #199e70; --st-unk: #c98500; --st-hit: #e66767; --st-shield: #6f737b; --st-none: #3a3e46;
@@ -66,7 +73,7 @@ svg text.b { font-weight: 600; }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .chip { padding: 3px 8px; border-radius: 6px; background: var(--chip); border: 1px solid var(--line); font-size: 13px; }
 .chip i { font-style: normal; color: var(--muted); font-size: 12px; margin-left: 4px; }
-.tbl-wrap { overflow-x: auto; }
+.tbl-wrap { overflow: auto; max-height: 560px; }
 table { border-collapse: collapse; width: 100%; font-size: 13px; font-variant-numeric: tabular-nums; }
 th, td { padding: 6px 8px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; }
 th { color: var(--muted); font-weight: 500; cursor: pointer; user-select: none; position: sticky; top: 0; background: var(--panel); }
@@ -74,52 +81,52 @@ th.on { color: var(--ink); }
 th:first-child, td:first-child, th:nth-child(2), td:nth-child(2) { text-align: left; }
 td .st { display: inline-flex; align-items: center; gap: 5px; }
 .note { color: var(--muted); font-size: 12px; margin-top: 8px; }
-details summary { cursor: pointer; color: var(--muted); font-size: 13px; margin-top: 8px; }
-.err { padding: 24px; color: var(--st-hit); }
 </style>
 </head>
 <body>
 <header>
-  <h1>KvK: IRON против RAGE<small>Два КвК, 14.11 и 21.11.2026. Сравнение по боевой мощи (БМ) и kill points (КП) до и после боёв</small></h1>
+  <h1><span id="tTitle"></span><small id="tSub"></small></h1>
   <div class="controls" style="margin:0">
-    <span class="lbl">КвК</span>
+    <span class="lbl" id="tKvkLbl"></span>
     <div class="seg" id="kvkSeg"></div>
+    <div class="seg" id="themeSeg"></div>
+    <div class="seg" id="langSeg"><button data-lang="ru">RU</button><button data-lang="en">EN</button></div>
   </div>
 </header>
 <main id="app">
   <section>
-    <h2>Сравнение альянсов</h2>
-    <p class="lead">Эффективность = сколько КП игрок набил на каждый 1 млн потерянной БМ. Считается только по игрокам, у которых известны и прирост КП, и потери БМ, иначе цифры не сравнить.</p>
+    <h2 id="tCmpH"></h2>
+    <p class="lead" id="tCmpLead"></p>
     <div class="tiles" id="tiles"></div>
     <div class="grid2">
-      <div class="card"><h3>КП на 1 млн потерь БМ</h3><div class="legend" id="lgA1"></div><div id="chEff"></div></div>
-      <div class="card"><h3>Суммарный прирост КП, млн</h3><div class="legend" id="lgA2"></div><div id="chKp"></div></div>
+      <div class="card"><h3 id="tEffH"></h3><div class="legend" id="lgA1"></div><div id="chEff"></div></div>
+      <div class="card"><h3 id="tKpH"></h3><div class="legend" id="lgA2"></div><div id="chKp"></div></div>
     </div>
   </section>
 
   <section>
-    <h2>Кто воюет, а кто сидит под щитом</h2>
-    <p class="lead">Статус игрока в каждом КвК. <b>Воевал</b>: прирост КП от 10 тыс. <b>Потери, КП не сняты</b>: БМ упала от 3 млн, а КП за день неизвестны, скорее всего дрался. <b>Потери без КП</b>: БМ упала от 3 млн, а КП почти не выросли, похоже на обнуление. <b>Под щитом</b>: БМ почти не упала и КП не росли. <b>Нет данных</b>: БМ не снята.</p>
+    <h2 id="tPartH"></h2>
+    <p class="lead" id="tPartLead"></p>
     <div class="card">
       <div class="legend" id="lgSt"></div>
       <div id="chPart"></div>
     </div>
     <div class="grid2" style="margin-top:16px">
-      <div class="card"><h3>Не воевали ни в одном КвК · IRON · <span id="idleNIRON"></span></h3><div class="chips" id="idleIRON"></div></div>
-      <div class="card"><h3>Не воевали ни в одном КвК · RAGE · <span id="idleNRAGE"></span></h3><div class="chips" id="idleRAGE"></div></div>
+      <div class="card"><h3><span id="tIdleH1"></span> · IRON · <span id="idleNIRON"></span></h3><div class="chips" id="idleIRON"></div></div>
+      <div class="card"><h3><span id="tIdleH2"></span> · RAGE · <span id="idleNRAGE"></span></h3><div class="chips" id="idleRAGE"></div></div>
     </div>
-    <p class="note">Сюда попали игроки, у которых ни в одном КвК нет статуса «Воевал» или «Потери, КП не сняты». В скобках статусы по двум дням.</p>
+    <p class="note" id="tIdleNote"></p>
   </section>
 
   <section>
-    <h2>Эффективность игроков</h2>
+    <h2 id="tPlH"></h2>
     <div class="controls">
-      <span class="lbl">Альянс</span><div class="seg" id="allySeg"></div>
-      <span class="lbl">Сортировка</span><div class="seg" id="metricSeg"></div>
+      <span class="lbl" id="tAllyLbl"></span><div class="seg" id="allySeg"></div>
+      <span class="lbl" id="tSortLbl"></span><div class="seg" id="metricSeg"></div>
     </div>
     <div class="card" style="margin-bottom:16px">
-      <h3>Потери БМ и прирост КП</h3>
-      <p class="lead" style="margin-bottom:4px">Каждая точка — игрок в одном КвК. Чем выше и левее, тем эффективнее: много КП при малых потерях. Пунктир — средняя эффективность обоих альянсов.</p>
+      <h3 id="tScH"></h3>
+      <p class="lead" style="margin-bottom:4px" id="tScLead"></p>
       <div class="legend" id="lgSc"></div>
       <div id="chScatter"></div>
     </div>
@@ -130,8 +137,8 @@ details summary { cursor: pointer; color: var(--muted); font-size: 13px; margin-
       <p class="note" id="barsNote"></p>
     </div>
     <div class="card">
-      <h3>Таблица</h3>
-      <div class="tbl-wrap" style="max-height:560px;overflow:auto"><table id="tbl"></table></div>
+      <h3 id="tTblH"></h3>
+      <div class="tbl-wrap"><table id="tbl"></table></div>
     </div>
   </section>
 </main>
@@ -535,18 +542,92 @@ details summary { cursor: pointer; color: var(--muted); font-size: 13px; margin-
 </script>
 
 <script>
-(async function () {
+(function () {
   const ALLY = ['IRON', 'RAGE'];
   const AC = { IRON: 'var(--iron)', RAGE: 'var(--rage)' };
   const STATUS = [
-    { k: 'fight', n: 'Воевал', c: 'var(--st-fight)' },
-    { k: 'unk', n: 'Потери, КП не сняты', c: 'var(--st-unk)' },
-    { k: 'hit', n: 'Потери без КП', c: 'var(--st-hit)' },
-    { k: 'shield', n: 'Под щитом', c: 'var(--st-shield)' },
-    { k: 'none', n: 'Нет данных', c: 'var(--st-none)' },
+    { k: 'fight', c: 'var(--st-fight)' },
+    { k: 'unk', c: 'var(--st-unk)' },
+    { k: 'hit', c: 'var(--st-hit)' },
+    { k: 'shield', c: 'var(--st-shield)' },
+    { k: 'none', c: 'var(--st-none)' },
   ];
   const ST = Object.fromEntries(STATUS.map(s => [s.k, s]));
   const KP_MIN = 10000, LOSS_MIN = 3e6;
+
+  // ---------- i18n ----------
+  const T = {
+    ru: {
+      title: 'KvK: IRON против RAGE',
+      sub: 'Два КвК, 14.11 и 21.11.2026. Сравнение по боевой мощи (БМ) и kill points (КП) до и после боёв',
+      kvkLbl: 'КвК', both: 'Оба', bothKvk: 'Оба КвК', kvk: 'КвК',
+      theme: { auto: 'Авто', light: 'Светлая', dark: 'Тёмная' },
+      cmpH: 'Сравнение альянсов',
+      cmpLead: 'Эффективность = сколько КП игрок набил на каждый 1 млн потерянной БМ. Считается только по игрокам, у которых известны и прирост КП, и потери БМ, иначе цифры не сравнить.',
+      effH: 'КП на 1 млн потерь БМ', kpH: 'Суммарный прирост КП, млн',
+      partH: 'Кто воюет, а кто сидит под щитом',
+      partLead: 'Статус игрока в каждом КвК. <b>Воевал</b>: прирост КП от 10 тыс. <b>Потери, КП не сняты</b>: БМ упала от 3 млн, а КП за день неизвестны, скорее всего дрался. <b>Потери без КП</b>: БМ упала от 3 млн, а КП почти не выросли, похоже на обнуление. <b>Под щитом</b>: БМ почти не упала и КП не росли. <b>Нет данных</b>: БМ не снята.',
+      idleH: 'Не воевали ни в одном КвК',
+      idleNote: 'Сюда попали игроки, у которых ни в одном КвК нет статуса «Воевал» или «Потери, КП не сняты». В скобках статусы по двум дням.',
+      idleNone: 'Таких нет',
+      plH: 'Эффективность игроков', allyLbl: 'Альянс', all: 'Все', sortLbl: 'Сортировка',
+      metric: { kp: 'Прирост КП', eff: 'КП на 1 млн', loss: 'Потери БМ' },
+      scH: 'Потери БМ и прирост КП',
+      scLead: 'Каждая точка — игрок в одном КвК. Чем выше и левее, тем эффективнее: много КП при малых потерях. Пунктир — средняя эффективность обоих альянсов.',
+      tblH: 'Таблица',
+      st: { fight: 'Воевал', unk: 'Потери, КП не сняты', hit: 'Потери без КП', shield: 'Под щитом', none: 'Нет данных' },
+      players: 'игроков в выгрузке', fought: 'воевали', foughtAny: 'воевали хотя бы раз', withUnk: 'с «КП не сняты»',
+      effTile: 'КП на 1 млн потерь БМ', better: 'лучше', sample: n => `по ${n} записям с полными данными`,
+      kpTotal: 'прирост КП, всего', lossTotal: 'потери БМ, всего',
+      tipEff: 'КП на 1 млн потерь', tipKp: 'Прирост КП', tipLoss: 'Потери БМ', tipFought: 'Воевали', of: 'из', tipPlayers: 'Игроков',
+      andMore: n => ` и ещё ${n}`, foughtCol: 'воевали',
+      xAxis: 'Потери БМ, млн →', yAxis: '↑ Прирост КП, тыс.', avg: v => `в среднем ${v} КП на 1 млн`,
+      barsT: { kp: 'Прирост КП по игрокам', eff: 'КП на 1 млн потерь БМ по игрокам', loss: 'Потери БМ по игрокам, млн' },
+      sumBoth: 'сумма за оба КвК',
+      missing: n => `Ещё ${n} игроков без значения: нет данных или ноль. `,
+      effNote: 'Эффективность считается только там, где потери от 1 млн БМ, иначе цифры улетают в бесконечность.',
+      status: 'Статус', col: { name: 'Игрок', ally: 'Альянс', bm: 'БМ', loss: 'Потери БМ', kp: 'Прирост КП', eff: 'КП на 1 млн' },
+      mln: 'млн', k: 'тыс.', locale: 'ru-RU',
+    },
+    en: {
+      title: 'KvK: IRON vs RAGE',
+      sub: 'Two KvKs, Nov 14 and Nov 21, 2026. Power and kill points (KP) before and after the fights',
+      kvkLbl: 'KvK', both: 'Both', bothKvk: 'Both KvKs', kvk: 'KvK',
+      theme: { auto: 'Auto', light: 'Light', dark: 'Dark' },
+      cmpH: 'Alliance comparison',
+      cmpLead: 'Efficiency = KP gained per 1M of power lost. Only players with both KP gain and power loss known are counted, otherwise the numbers are not comparable.',
+      effH: 'KP per 1M power lost', kpH: 'Total KP gained, M',
+      partH: 'Who fights and who hides under a shield',
+      partLead: 'Player status in each KvK. <b>Fought</b>: KP gain of 10k or more. <b>Losses, KP unknown</b>: power dropped by 3M+ but the day’s KP was not captured, most likely fought. <b>Losses without KP</b>: power dropped by 3M+ with almost no KP, looks like getting zeroed. <b>Shielded</b>: power barely dropped and KP did not grow. <b>No data</b>: power not captured.',
+      idleH: 'Did not fight in either KvK',
+      idleNote: 'Players with no “Fought” or “Losses, KP unknown” status in either KvK. Statuses for both days are shown next to the name.',
+      idleNone: 'Nobody',
+      plH: 'Player efficiency', allyLbl: 'Alliance', all: 'All', sortLbl: 'Sort by',
+      metric: { kp: 'KP gained', eff: 'KP per 1M', loss: 'Power lost' },
+      scH: 'Power lost vs KP gained',
+      scLead: 'Each dot is a player in one KvK. Higher and further left means more efficient: lots of KP for little loss. The dashed line is the average efficiency of both alliances.',
+      tblH: 'Table',
+      st: { fight: 'Fought', unk: 'Losses, KP unknown', hit: 'Losses without KP', shield: 'Shielded', none: 'No data' },
+      players: 'players in export', fought: 'fought', foughtAny: 'fought at least once', withUnk: 'incl. “KP unknown”',
+      effTile: 'KP per 1M power lost', better: 'better', sample: n => `from ${n} complete records`,
+      kpTotal: 'KP gained, total', lossTotal: 'power lost, total',
+      tipEff: 'KP per 1M lost', tipKp: 'KP gained', tipLoss: 'Power lost', tipFought: 'Fought', of: 'of', tipPlayers: 'Players',
+      andMore: n => ` and ${n} more`, foughtCol: 'fought',
+      xAxis: 'Power lost, M →', yAxis: '↑ KP gained, k', avg: v => `average ${v} KP per 1M`,
+      barsT: { kp: 'KP gained by player', eff: 'KP per 1M power lost by player', loss: 'Power lost by player, M' },
+      sumBoth: 'total for both KvKs',
+      missing: n => `${n} more players have no value: missing data or zero. `,
+      effNote: 'Efficiency is shown only for losses of 1M power or more, otherwise the ratio shoots to infinity.',
+      status: 'Status', col: { name: 'Player', ally: 'Alliance', bm: 'Power', loss: 'Power lost', kp: 'KP gained', eff: 'KP per 1M' },
+      mln: 'M', k: 'k', locale: 'en-US',
+    },
+  };
+
+  const params = new URLSearchParams(location.search);
+  let saved = null; try { saved = localStorage.getItem('kvk-lang'); } catch (e) {}
+  let lang = params.get('lang') || saved || ((navigator.language || '').toLowerCase().startsWith('ru') ? 'ru' : 'en');
+  if (!T[lang]) lang = 'ru';
+  const t = () => T[lang];
 
   // ---------- data ----------
   const text = document.getElementById('kvk-data').textContent; // trim() ниже срезает и BOM
@@ -571,7 +652,6 @@ details summary { cursor: pointer; color: var(--muted); font-size: 13px; margin-
   const DATES = [...new Set(rows.map(r => r.date))].sort();
   const dLabel = d => d.slice(8, 10) + '.' + d.slice(5, 7);
 
-  // players
   const players = new Map();
   rows.forEach(r => {
     if (!players.has(r.id)) players.set(r.id, { id: r.id, name: r.name, ally: r.ally, by: {} });
@@ -579,15 +659,20 @@ details summary { cursor: pointer; color: var(--muted); font-size: 13px; margin-
   });
 
   // ---------- state ----------
+  let theme = 'auto'; try { theme = localStorage.getItem('kvk-theme') || 'auto'; } catch (e) {}
   const state = { kvk: 'all', ally: 'all', metric: 'kp', sortCol: 'kp', sortDir: -1 };
   const kvkDates = () => state.kvk === 'all' ? DATES : [state.kvk];
 
   // ---------- helpers ----------
-  const fmtM = v => v == null ? '—' : (v / 1e6).toLocaleString('ru-RU', { maximumFractionDigits: 1, minimumFractionDigits: 1 }) + ' млн';
-  const fmtK = v => v == null ? '—' : v >= 1e6 ? (v / 1e6).toLocaleString('ru-RU', { maximumFractionDigits: 2 }) + ' млн' : v >= 1e4 ? Math.round(v / 1e3).toLocaleString('ru-RU') + ' тыс.' : Math.round(v).toLocaleString('ru-RU');
-  const fmtN = v => v == null ? '—' : Math.round(v).toLocaleString('ru-RU');
+  const loc = () => t().locale;
+  const fmtM = v => v == null ? '—' : (v / 1e6).toLocaleString(loc(), { maximumFractionDigits: 1, minimumFractionDigits: 1 }) + ' ' + t().mln;
+  const fmtK = v => v == null ? '—' : v >= 1e6 ? (v / 1e6).toLocaleString(loc(), { maximumFractionDigits: 2 }) + ' ' + t().mln : v >= 1e4 ? Math.round(v / 1e3).toLocaleString(loc()) + ' ' + t().k : Math.round(v).toLocaleString(loc());
+  const fmtN = v => v == null ? '—' : Math.round(v).toLocaleString(loc());
+  const fmtTick = v => v.toLocaleString(loc());
   const pct = (a, b) => b ? Math.round(a / b * 100) + '%' : '—';
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const stName = k => t().st[k];
+  const lcFirst = s => s.charAt(0).toLowerCase() + s.slice(1);
   const NS = 'http://www.w3.org/2000/svg';
   function niceMax(v) {
     if (v <= 0) return 1;
@@ -606,9 +691,10 @@ details summary { cursor: pointer; color: var(--muted); font-size: 13px; margin-
     r = Math.min(r, w, h / 2);
     return `M${x},${y}H${x + w - r}Q${x + w},${y} ${x + w},${y + r}V${y + h - r}Q${x + w},${y + h} ${x + w - r},${y + h}H${x}Z`;
   };
-  function legend(el, items) {
-    document.getElementById(el).innerHTML = items.map(i => `<span><span class="sw" style="background:${i.c}"></span>${esc(i.n)}</span>`).join('');
+  function legend(id, items) {
+    document.getElementById(id).innerHTML = items.map(i => `<span><span class="sw" style="background:${i.c}"></span>${esc(i.n)}</span>`).join('');
   }
+  const setText = (id, v) => { document.getElementById(id).textContent = v; };
 
   // tooltip
   const tip = document.getElementById('tip');
@@ -645,34 +731,63 @@ details summary { cursor: pointer; color: var(--muted); font-size: 13px; margin-
     const cnt = Object.fromEntries(STATUS.map(s => [s.k, 0]));
     rs.forEach(r => cnt[r.status]++);
     const n = new Set(rs.map(r => r.id)).size;
-    // player-level participation: fought in at least one of selected dates
     const ids = new Set(rs.filter(r => r.status === 'fight').map(r => r.id));
     const idsMaybe = new Set(rs.filter(r => r.status === 'fight' || r.status === 'unk').map(r => r.id));
     return { rows: rs, n, kp, loss, eff: loss ? kp / (loss / 1e6) : null, kpAll, lossAll, cnt, fought: ids.size, foughtMaybe: idsMaybe.size, sample: both.length };
   }
 
   // ---------- controls ----------
-  function seg(id, opts, key, onChange) {
+  function seg(id, opts, get, set) {
     const box = document.getElementById(id);
     box.innerHTML = '';
     opts.forEach(([v, label]) => {
       const b = document.createElement('button');
-      b.textContent = label; b.className = state[key] === v ? 'on' : '';
-      b.onclick = () => { state[key] = v; [...box.children].forEach(c => c.classList.remove('on')); b.classList.add('on'); onChange(); };
+      b.textContent = label; b.className = get() === v ? 'on' : '';
+      b.onclick = () => set(v);
       box.appendChild(b);
     });
   }
-  seg('kvkSeg', [['all', 'Оба'], ...DATES.map(d => [d, dLabel(d)])], 'kvk', renderAll);
-  seg('allySeg', [['all', 'Все'], ['IRON', 'IRON'], ['RAGE', 'RAGE']], 'ally', renderPlayers);
-  seg('metricSeg', [['kp', 'Прирост КП'], ['eff', 'КП на 1 млн'], ['loss', 'Потери БМ']], 'metric', () => { state.sortCol = state.metric; state.sortDir = -1; renderPlayers(); });
+  function applyTheme() {
+    if (theme === 'light' || theme === 'dark') document.documentElement.dataset.theme = theme;
+    else delete document.documentElement.dataset.theme;
+    try { if (theme === 'auto') localStorage.removeItem('kvk-theme'); else localStorage.setItem('kvk-theme', theme); } catch (e) {}
+  }
+  function syncUrl() {
+    const u = new URL(location.href);
+    u.searchParams.set('lang', lang);
+    try { history.replaceState(null, '', u); } catch (e) {}
+  }
+  function renderControls() {
+    seg('kvkSeg', [['all', t().both], ...DATES.map(d => [d, dLabel(d)])], () => state.kvk, v => { state.kvk = v; renderAll(); });
+    seg('themeSeg', ['auto', 'light', 'dark'].map(v => [v, t().theme[v]]), () => theme, v => { theme = v; applyTheme(); renderControls(); });
+    seg('allySeg', [['all', t().all], ['IRON', 'IRON'], ['RAGE', 'RAGE']], () => state.ally, v => { state.ally = v; renderControls(); renderPlayers(); });
+    seg('metricSeg', ['kp', 'eff', 'loss'].map(v => [v, t().metric[v]]), () => state.metric, v => { state.metric = v; state.sortCol = v; state.sortDir = -1; renderControls(); renderPlayers(); });
+    document.querySelectorAll('#langSeg button').forEach(b => b.classList.toggle('on', b.dataset.lang === lang));
+  }
+  document.querySelectorAll('#langSeg button').forEach(b => b.onclick = () => {
+    lang = b.dataset.lang;
+    try { localStorage.setItem('kvk-lang', lang); } catch (e) {}
+    renderAll();
+  });
 
-  const allyLegend = ALLY.map(a => ({ n: a, c: AC[a] }));
-  legend('lgA1', allyLegend); legend('lgA2', allyLegend); legend('lgSc', allyLegend); legend('lgBars', allyLegend);
-  legend('lgSt', STATUS.map(s => ({ n: s.n, c: s.c })));
+  function renderStatic() {
+    const x = t();
+    document.documentElement.lang = lang;
+    document.title = x.title.replace('KvK: ', 'KvK ');
+    setText('tTitle', x.title); setText('tSub', x.sub); setText('tKvkLbl', x.kvkLbl);
+    setText('tCmpH', x.cmpH); setText('tCmpLead', x.cmpLead); setText('tEffH', x.effH); setText('tKpH', x.kpH);
+    setText('tPartH', x.partH); document.getElementById('tPartLead').innerHTML = x.partLead;
+    setText('tIdleH1', x.idleH); setText('tIdleH2', x.idleH); setText('tIdleNote', x.idleNote);
+    setText('tPlH', x.plH); setText('tAllyLbl', x.allyLbl); setText('tSortLbl', x.sortLbl);
+    setText('tScH', x.scH); setText('tScLead', x.scLead); setText('tTblH', x.tblH);
+    const allyLegend = ALLY.map(a => ({ n: a, c: AC[a] }));
+    ['lgA1', 'lgA2', 'lgSc', 'lgBars'].forEach(id => legend(id, allyLegend));
+    legend('lgSt', STATUS.map(s => ({ n: stName(s.k), c: s.c })));
+  }
 
   // ---------- tiles ----------
   function renderTiles() {
-    const dates = kvkDates();
+    const x0 = t(), dates = kvkDates();
     const s = ALLY.map(a => allyStats(a, dates));
     document.getElementById('tiles').innerHTML = ALLY.map((a, i) => {
       const x = s[i], o = s[1 - i];
@@ -680,11 +795,11 @@ details summary { cursor: pointer; color: var(--muted); font-size: 13px; margin-
       return `<div class="card">
         <div class="tile-head"><span class="sw" style="background:${AC[a]}"></span>${a}</div>
         <div class="stats">
-          <div class="stat"><div class="v">${x.n}</div><div class="k">игроков в выгрузке</div></div>
-          <div class="stat"><div class="v">${x.fought} <span style="font-size:14px;color:var(--muted)">${pct(x.fought, x.n)}</span></div><div class="k">воевали${dates.length > 1 ? ' хотя бы раз' : ''}</div><div class="d">с «КП не сняты»: ${x.foughtMaybe} (${pct(x.foughtMaybe, x.n)})</div></div>
-          <div class="stat"><div class="v">${fmtN(x.eff)}</div><div class="k">КП на 1 млн потерь БМ${better ? ' · лучше' : ''}</div><div class="d">по ${x.sample} записям с полными данными</div></div>
-          <div class="stat"><div class="v">${fmtM(x.kpAll)}</div><div class="k">прирост КП, всего</div></div>
-          <div class="stat"><div class="v">${fmtM(x.lossAll)}</div><div class="k">потери БМ, всего</div></div>
+          <div class="stat"><div class="v">${x.n}</div><div class="k">${x0.players}</div></div>
+          <div class="stat"><div class="v">${x.fought} <span style="font-size:14px;color:var(--muted)">${pct(x.fought, x.n)}</span></div><div class="k">${dates.length > 1 ? x0.foughtAny : x0.fought}</div><div class="d">${x0.withUnk}: ${x.foughtMaybe} (${pct(x.foughtMaybe, x.n)})</div></div>
+          <div class="stat"><div class="v">${fmtN(x.eff)}</div><div class="k">${x0.effTile}${better ? ' · ' + x0.better : ''}</div><div class="d">${x0.sample(x.sample)}</div></div>
+          <div class="stat"><div class="v">${fmtM(x.kpAll)}</div><div class="k">${x0.kpTotal}</div></div>
+          <div class="stat"><div class="v">${fmtM(x.lossAll)}</div><div class="k">${x0.lossTotal}</div></div>
         </div>
       </div>`;
     }).join('');
@@ -695,35 +810,33 @@ details summary { cursor: pointer; color: var(--muted); font-size: 13px; margin-
     const box = document.getElementById(container);
     box.innerHTML = '';
     const W = 520, H = 240, m = { l: 48, r: 8, t: 20, b: 28 };
-    const groups = [...DATES.map(d => ({ k: d, label: 'КвК ' + dLabel(d), dates: [d] })), { k: 'all', label: 'Оба КвК', dates: DATES }];
+    const groups = [...DATES.map(d => ({ k: d, label: t().kvk + ' ' + dLabel(d), dates: [d] })), { k: 'all', label: t().bothKvk, dates: DATES }];
     const data = groups.map(g => ({ ...g, v: ALLY.map(a => ({ a, s: allyStats(a, g.dates) })).map(x => ({ ...x, val: valueFn(x.s) })) }));
     const max = niceMax(Math.max(...data.flatMap(g => g.v.map(x => x.val || 0))) / unitDiv);
     const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, role: 'img' }, box);
     const iw = W - m.l - m.r, ih = H - m.t - m.b;
     const y = v => m.t + ih - v / unitDiv / max * ih;
-    ticks(max).forEach(t => {
-      el('line', { x1: m.l, x2: W - m.r, y1: y(t * unitDiv), y2: y(t * unitDiv), class: t === 0 ? 'ax' : 'gl' }, svg);
-      el('text', { x: m.l - 6, y: y(t * unitDiv) + 4, 'text-anchor': 'end' }, svg).textContent = t.toLocaleString('ru-RU');
+    ticks(max).forEach(tk => {
+      el('line', { x1: m.l, x2: W - m.r, y1: y(tk * unitDiv), y2: y(tk * unitDiv), class: tk === 0 ? 'ax' : 'gl' }, svg);
+      el('text', { x: m.l - 6, y: y(tk * unitDiv) + 4, 'text-anchor': 'end' }, svg).textContent = fmtTick(tk);
     });
     const gw = iw / groups.length, bw = Math.min(44, gw * 0.3), gap = 2;
     data.forEach((g, gi) => {
       const cx = m.l + gw * gi + gw / 2;
       const active = state.kvk === g.k;
-      const lab = el('text', { x: cx, y: H - 8, 'text-anchor': 'middle', class: active ? 'ink b' : '' }, svg);
-      lab.textContent = g.label;
+      el('text', { x: cx, y: H - 8, 'text-anchor': 'middle', class: active ? 'ink b' : '' }, svg).textContent = g.label;
       g.v.forEach((x, i) => {
         const bx = cx - bw - gap / 2 + i * (bw + gap);
         const val = x.val || 0;
         const by = y(val);
         el('path', { d: roundTop(bx, by, bw, m.t + ih - by), fill: AC[x.a], class: 'mark' }, svg);
-        const t = el('text', { x: bx + bw / 2, y: by - 5, 'text-anchor': 'middle', class: 'ink' }, svg);
-        t.textContent = fmt(val);
+        el('text', { x: bx + bw / 2, y: by - 5, 'text-anchor': 'middle', class: 'ink' }, svg).textContent = fmt(val);
         const hit = el('rect', { x: bx - 1, y: m.t, width: bw + 2, height: ih, class: 'hit' }, svg);
         bindTip(hit, () => `<b>${x.a} · ${g.label}</b>` +
-          trow('КП на 1 млн потерь', fmtN(x.s.eff)) +
-          trow('Прирост КП', fmtM(x.s.kpAll)) +
-          trow('Потери БМ', fmtM(x.s.lossAll)) +
-          trow('Воевали', `${x.s.fought} из ${x.s.n}`));
+          trow(t().tipEff, fmtN(x.s.eff)) +
+          trow(t().tipKp, fmtM(x.s.kpAll)) +
+          trow(t().tipLoss, fmtM(x.s.lossAll)) +
+          trow(t().tipFought, `${x.s.fought} ${t().of} ${x.s.n}`));
       });
     });
   }
@@ -751,34 +864,32 @@ details summary { cursor: pointer; color: var(--muted); font-size: 13px; margin-
       el('text', { x: 22, y: yy + bh / 2 + 4, class: 'ink' }, g).textContent = `${ln.a} · ${dLabel(ln.d)}`;
       const total = ln.s.rows.length;
       let x0 = m.l;
-      STATUS.forEach((st, si) => {
+      STATUS.forEach(st => {
         const c = ln.s.cnt[st.k];
         if (!c) return;
         const w = iw * c / total;
         el('rect', { x: x0, y: yy, width: Math.max(0, w - 2), height: bh, fill: st.c, rx: 2, class: 'mark' }, g);
         if (w > 26) {
-          const t = el('text', { x: x0 + w / 2 - 1, y: yy + bh / 2 + 4, 'text-anchor': 'middle', class: 'ink b' }, g);
-          t.textContent = c;
-          t.setAttribute('style', 'fill:' + (st.k === 'none' || st.k === 'unk' ? 'var(--ink)' : '#fff'));
+          const tx = el('text', { x: x0 + w / 2 - 1, y: yy + bh / 2 + 4, 'text-anchor': 'middle', class: 'ink b' }, g);
+          tx.textContent = c;
+          tx.setAttribute('style', 'fill:' + (st.k === 'none' || st.k === 'unk' ? 'var(--ink)' : '#fff'));
         }
         const hit = el('rect', { x: x0, y: yy - 4, width: w, height: bh + 8, class: 'hit' }, g);
         const names = ln.s.rows.filter(r => r.status === st.k).map(r => r.name);
-        bindTip(hit, () => `<b>${ln.a} · ${dLabel(ln.d)} · ${st.n}</b>` + trow('Игроков', `${c} из ${total} (${pct(c, total)})`) +
-          `<div style="margin-top:4px;color:var(--muted);font-size:12px">${names.slice(0, 18).map(esc).join(', ')}${names.length > 18 ? ' и ещё ' + (names.length - 18) : ''}</div>`);
+        bindTip(hit, () => `<b>${ln.a} · ${dLabel(ln.d)} · ${stName(st.k)}</b>` + trow(t().tipPlayers, `${c} ${t().of} ${total} (${pct(c, total)})`) +
+          `<div style="margin-top:4px;color:var(--muted);font-size:12px">${names.slice(0, 18).map(esc).join(', ')}${names.length > 18 ? t().andMore(names.length - 18) : ''}</div>`);
         x0 += w;
       });
-      const fightPct = pct(ln.s.cnt.fight, total);
-      el('text', { x: W - m.r + 8, y: yy + bh / 2 + 4, class: 'ink b' }, g).textContent = fightPct;
+      el('text', { x: W - m.r + 8, y: yy + bh / 2 + 4, class: 'ink b' }, g).textContent = pct(ln.s.cnt.fight, total);
     });
-    el('text', { x: W - m.r + 8, y: 12 }, svg).textContent = 'воевали';
+    el('text', { x: W - m.r + 8, y: 12 }, svg).textContent = t().foughtCol;
 
-    // idle lists
     ALLY.forEach(a => {
       const idle = [...players.values()].filter(p => p.ally === a && DATES.every(d => !p.by[d] || !['fight', 'unk'].includes(p.by[d].status)));
-      document.getElementById('idleN' + a).textContent = idle.length;
+      setText('idleN' + a, idle.length);
       document.getElementById('idle' + a).innerHTML = idle.length
-        ? idle.map(p => `<span class="chip">${esc(p.name)}<i>${DATES.map(d => p.by[d] ? ST[p.by[d].status].n.toLowerCase() : '—').join(' / ')}</i></span>`).join('')
-        : '<span class="note">Таких нет</span>';
+        ? idle.map(p => `<span class="chip">${esc(p.name)}<i>${DATES.map(d => p.by[d] ? lcFirst(stName(p.by[d].status)) : '—').join(' / ')}</i></span>`).join('')
+        : `<span class="note">${t().idleNone}</span>`;
     });
   }
 
@@ -812,43 +923,41 @@ details summary { cursor: pointer; color: var(--muted); font-size: 13px; margin-
     const yMax = niceMax(Math.max(...pts.map(r => r.kp), 1) / 1e3);
     const sx = v => m.l + v / 1e6 / xMax * iw, sy = v => m.t + ih - v / 1e3 / yMax * ih;
     const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, role: 'img' }, box);
-    ticks(yMax).forEach(t => {
-      el('line', { x1: m.l, x2: W - m.r, y1: sy(t * 1e3), y2: sy(t * 1e3), class: t === 0 ? 'ax' : 'gl' }, svg);
-      el('text', { x: m.l - 6, y: sy(t * 1e3) + 4, 'text-anchor': 'end' }, svg).textContent = t.toLocaleString('ru-RU');
+    ticks(yMax).forEach(tk => {
+      el('line', { x1: m.l, x2: W - m.r, y1: sy(tk * 1e3), y2: sy(tk * 1e3), class: tk === 0 ? 'ax' : 'gl' }, svg);
+      el('text', { x: m.l - 6, y: sy(tk * 1e3) + 4, 'text-anchor': 'end' }, svg).textContent = fmtTick(tk);
     });
-    ticks(xMax, 4).forEach(t => {
-      el('line', { x1: sx(t * 1e6), x2: sx(t * 1e6), y1: m.t, y2: m.t + ih, class: t === 0 ? 'ax' : 'gl' }, svg);
-      el('text', { x: sx(t * 1e6), y: m.t + ih + 16, 'text-anchor': 'middle' }, svg).textContent = t.toLocaleString('ru-RU');
+    ticks(xMax, 4).forEach(tk => {
+      el('line', { x1: sx(tk * 1e6), x2: sx(tk * 1e6), y1: m.t, y2: m.t + ih, class: tk === 0 ? 'ax' : 'gl' }, svg);
+      el('text', { x: sx(tk * 1e6), y: m.t + ih + 16, 'text-anchor': 'middle' }, svg).textContent = fmtTick(tk);
     });
-    el('text', { x: m.l + iw, y: H - 4, 'text-anchor': 'end' }, svg).textContent = 'Потери БМ, млн →';
-    el('text', { x: m.l + 4, y: m.t + 10 }, svg).textContent = '↑ Прирост КП, тыс.';
-    // average efficiency reference line
+    el('text', { x: m.l + iw, y: H - 4, 'text-anchor': 'end' }, svg).textContent = t().xAxis;
+    el('text', { x: m.l + 4, y: m.t + 10 }, svg).textContent = t().yAxis;
     const tk = pts.reduce((s, r) => s + r.kp, 0), tl = pts.reduce((s, r) => s + r.loss, 0);
     if (tl > 0) {
-      const e = tk / tl; // kp per 1 BM
+      const e = tk / tl;
       let x2 = xMax * 1e6, y2 = e * x2;
       if (y2 > yMax * 1e3) { y2 = yMax * 1e3; x2 = y2 / e; }
       el('line', { x1: sx(0), y1: sy(0), x2: sx(x2), y2: sy(y2), stroke: 'var(--muted)', 'stroke-dasharray': '4 4', 'stroke-width': 1.5 }, svg);
-      el('text', { x: sx(x2) - 4, y: sy(y2) + 18, 'text-anchor': 'end' }, svg).textContent = `в среднем ${fmtN(e * 1e6)} КП на 1 млн`;
+      el('text', { x: sx(x2) - 4, y: sy(y2) + 18, 'text-anchor': 'end' }, svg).textContent = t().avg(fmtN(e * 1e6));
     }
     const g = el('g', {}, svg);
     pts.sort((a, b) => b.kp - a.kp).forEach(r => {
-      const c = el('circle', { cx: sx(r.loss), cy: sy(r.kp), r: 5, fill: AC[r.ally], stroke: 'var(--panel)', 'stroke-width': 2, class: 'mark', 'data-id': r.id }, g);
+      el('circle', { cx: sx(r.loss), cy: sy(r.kp), r: 5, fill: AC[r.ally], stroke: 'var(--panel)', 'stroke-width': 2, class: 'mark', 'data-id': r.id }, g);
       const hit = el('circle', { cx: sx(r.loss), cy: sy(r.kp), r: 10, class: 'hit' }, g);
-      bindTip(hit, () => `<b>${esc(r.name)} · ${r.ally}</b>` + trow('КвК', dLabel(r.date)) + trow('Прирост КП', fmtK(r.kp)) + trow('Потери БМ', fmtM(r.loss)) + trow('КП на 1 млн', fmtN(r.eff)),
+      bindTip(hit, () => `<b>${esc(r.name)} · ${r.ally}</b>` + trow(t().kvk, dLabel(r.date)) + trow(t().tipKp, fmtK(r.kp)) + trow(t().tipLoss, fmtM(r.loss)) + trow(t().metric.eff, fmtN(r.eff)),
         () => { svg.classList.add('dimmed'); g.querySelectorAll(`[data-id="${r.id}"]`).forEach(n => n.classList.add('hl')); },
         () => { svg.classList.remove('dimmed'); g.querySelectorAll('.hl').forEach(n => n.classList.remove('hl')); });
     });
-    // label top 6 by KP
     const placed = [];
     [...pts].sort((a, b) => b.kp - a.kp).slice(0, 8).forEach(r => {
       const x = sx(r.loss), y = sy(r.kp), right = x > W - 160;
       const label = state.kvk === 'all' ? `${r.name} · ${dLabel(r.date)}` : r.name;
       const lx = x + (right ? -9 : 9), w = label.length * 7;
-      const box = { x0: right ? lx - w : lx, x1: right ? lx : lx + w, y0: y - 10, y1: y + 6 };
-      if (placed.some(b => b.x0 < box.x1 && box.x0 < b.x1 && b.y0 < box.y1 && box.y0 < b.y1)) return;
+      const bx = { x0: right ? lx - w : lx, x1: right ? lx : lx + w, y0: y - 10, y1: y + 6 };
+      if (placed.some(b => b.x0 < bx.x1 && bx.x0 < b.x1 && b.y0 < bx.y1 && bx.y0 < b.y1)) return;
       if (placed.length >= 6) return;
-      placed.push(box);
+      placed.push(bx);
       el('text', { x: lx, y: y + 4, 'text-anchor': right ? 'end' : 'start', class: 'ink' }, svg).textContent = label;
     });
   }
@@ -857,23 +966,21 @@ details summary { cursor: pointer; color: var(--muted); font-size: 13px; margin-
     const box = document.getElementById('chBars');
     box.innerHTML = '';
     const metric = state.metric;
-    const titles = { kp: 'Прирост КП по игрокам', eff: 'КП на 1 млн потерь БМ по игрокам', loss: 'Потери БМ по игрокам, млн' };
-    document.getElementById('barsTitle').textContent = titles[metric] + (state.kvk === 'all' ? ' · сумма за оба КвК' : ' · КвК ' + dLabel(state.kvk));
+    setText('barsTitle', t().barsT[metric] + ' · ' + (state.kvk === 'all' ? t().sumBoth : t().kvk + ' ' + dLabel(state.kvk)));
     const all = visiblePlayers();
     const list = all.filter(x => x[metric] != null && x[metric] > 0).sort((a, b) => b[metric] - a[metric]);
     const missing = all.length - list.length;
-    document.getElementById('barsNote').textContent = (missing ? `Ещё ${missing} игроков без значения: нет данных или ноль. ` : '') +
-      (metric === 'eff' ? 'Эффективность считается только там, где потери от 1 млн БМ, иначе цифры улетают в бесконечность.' : '');
+    setText('barsNote', (missing ? t().missing(missing) : '') + (metric === 'eff' ? t().effNote : ''));
     const W = 900, rowH = 20, m = { l: 160, r: 90, t: 22, b: 6 };
     const H = m.t + list.length * rowH + m.b;
     const iw = W - m.l - m.r;
     const div = metric === 'loss' ? 1e6 : 1;
     const max = niceMax(Math.max(...list.map(x => x[metric]), 1) / div);
     const svg = el('svg', { viewBox: `0 0 ${W} ${Math.max(H, 60)}`, role: 'img' }, box);
-    ticks(max).forEach(t => {
-      const x = m.l + t / max * iw;
-      el('line', { x1: x, x2: x, y1: m.t - 4, y2: H - m.b, class: t === 0 ? 'ax' : 'gl' }, svg);
-      el('text', { x, y: 12, 'text-anchor': 'middle' }, svg).textContent = metric === 'kp' ? fmtK(t) : t.toLocaleString('ru-RU');
+    ticks(max).forEach(tk => {
+      const x = m.l + tk / max * iw;
+      el('line', { x1: x, x2: x, y1: m.t - 4, y2: H - m.b, class: tk === 0 ? 'ax' : 'gl' }, svg);
+      el('text', { x, y: 12, 'text-anchor': 'middle' }, svg).textContent = metric === 'kp' ? fmtK(tk) : fmtTick(tk);
     });
     const fmt = metric === 'kp' ? fmtK : metric === 'loss' ? fmtM : fmtN;
     list.forEach((x, i) => {
@@ -884,34 +991,35 @@ details summary { cursor: pointer; color: var(--muted); font-size: 13px; margin-
       el('path', { d: roundRight(m.l, yy + 3, w, rowH - 6), fill: AC[x.p.ally], class: 'mark' }, svg);
       el('text', { x: m.l + w + 6, y: yy + rowH / 2 + 4 }, svg).textContent = fmt(x[metric]);
       const hit = el('rect', { x: 0, y: yy, width: W, height: rowH, class: 'hit' }, svg);
-      bindTip(hit, () => `<b>${esc(x.p.name)} · ${x.p.ally}</b>` + trow('Прирост КП', fmtK(x.kp)) + trow('Потери БМ', fmtM(x.loss)) + trow('КП на 1 млн', fmtN(x.eff)) +
-        DATES.map(d => trow('Статус ' + dLabel(d), x.p.by[d] ? ST[x.p.by[d].status].n : '—')).join(''));
+      bindTip(hit, () => `<b>${esc(x.p.name)} · ${x.p.ally}</b>` + trow(t().tipKp, fmtK(x.kp)) + trow(t().tipLoss, fmtM(x.loss)) + trow(t().metric.eff, fmtN(x.eff)) +
+        DATES.map(d => trow(t().status + ' ' + dLabel(d), x.p.by[d] ? stName(x.p.by[d].status) : '—')).join(''));
     });
   }
 
   function renderTable() {
+    const c = t().col;
     const cols = [
-      { k: 'name', n: 'Игрок', v: x => x.p.name, f: x => esc(x.p.name) },
-      { k: 'ally', n: 'Альянс', v: x => x.p.ally, f: x => `<span class="st"><span class="sw" style="background:${AC[x.p.ally]}"></span>${x.p.ally}</span>` },
-      { k: 'bm', n: 'БМ', v: x => x.bm, f: x => fmtM(x.bm) },
-      { k: 'loss', n: 'Потери БМ', v: x => x.loss, f: x => fmtM(x.loss) },
-      { k: 'kp', n: 'Прирост КП', v: x => x.kp, f: x => fmtN(x.kp) },
-      { k: 'eff', n: 'КП на 1 млн', v: x => x.eff, f: x => fmtN(x.eff) },
-      ...DATES.map(d => ({ k: 's' + d, n: 'Статус ' + dLabel(d), v: x => x.p.by[d] ? STATUS.findIndex(s => s.k === x.p.by[d].status) : 9,
-        f: x => x.p.by[d] ? `<span class="st"><span class="sw" style="background:${ST[x.p.by[d].status].c}"></span>${ST[x.p.by[d].status].n}</span>` : '—' })),
+      { k: 'name', n: c.name, v: x => x.p.name, f: x => esc(x.p.name) },
+      { k: 'ally', n: c.ally, v: x => x.p.ally, f: x => `<span class="st"><span class="sw" style="background:${AC[x.p.ally]}"></span>${x.p.ally}</span>` },
+      { k: 'bm', n: c.bm, v: x => x.bm, f: x => fmtM(x.bm) },
+      { k: 'loss', n: c.loss, v: x => x.loss, f: x => fmtM(x.loss) },
+      { k: 'kp', n: c.kp, v: x => x.kp, f: x => fmtN(x.kp) },
+      { k: 'eff', n: c.eff, v: x => x.eff, f: x => fmtN(x.eff) },
+      ...DATES.map(d => ({ k: 's' + d, n: t().status + ' ' + dLabel(d), v: x => x.p.by[d] ? STATUS.findIndex(s => s.k === x.p.by[d].status) : 9,
+        f: x => x.p.by[d] ? `<span class="st"><span class="sw" style="background:${ST[x.p.by[d].status].c}"></span>${stName(x.p.by[d].status)}</span>` : '—' })),
     ];
     const list = visiblePlayers();
-    const col = cols.find(c => c.k === state.sortCol) || cols[4];
+    const col = cols.find(cc => cc.k === state.sortCol) || cols[4];
     list.sort((a, b) => {
       const va = col.v(a), vb = col.v(b);
       if (va == null && vb == null) return 0;
       if (va == null) return 1; if (vb == null) return -1;
       return (typeof va === 'string' ? va.localeCompare(vb) : va - vb) * state.sortDir;
     });
-    const t = document.getElementById('tbl');
-    t.innerHTML = '<thead><tr>' + cols.map(c => `<th data-k="${c.k}" class="${c.k === col.k ? 'on' : ''}">${c.n}${c.k === col.k ? (state.sortDir < 0 ? ' ↓' : ' ↑') : ''}</th>`).join('') + '</tr></thead><tbody>' +
-      list.map(x => '<tr>' + cols.map(c => `<td>${c.f(x)}</td>`).join('') + '</tr>').join('') + '</tbody>';
-    t.querySelectorAll('th').forEach(th => th.onclick = () => {
+    const tb = document.getElementById('tbl');
+    tb.innerHTML = '<thead><tr>' + cols.map(cc => `<th data-k="${cc.k}" class="${cc.k === col.k ? 'on' : ''}">${cc.n}${cc.k === col.k ? (state.sortDir < 0 ? ' ↓' : ' ↑') : ''}</th>`).join('') + '</tr></thead><tbody>' +
+      list.map(x => '<tr>' + cols.map(cc => `<td>${cc.f(x)}</td>`).join('') + '</tr>').join('') + '</tbody>';
+    tb.querySelectorAll('th').forEach(th => th.onclick = () => {
       const k = th.dataset.k;
       if (state.sortCol === k) state.sortDir *= -1; else { state.sortCol = k; state.sortDir = (k === 'name' || k === 'ally' || k.startsWith('s')) ? 1 : -1; }
       renderTable();
@@ -920,12 +1028,16 @@ details summary { cursor: pointer; color: var(--muted); font-size: 13px; margin-
 
   function renderPlayers() { renderScatter(); renderBars(); renderTable(); }
   function renderAll() {
+    renderStatic();
+    renderControls();
     renderTiles();
     groupedBars('chEff', s => s.eff, v => fmtN(v));
-    groupedBars('chKp', s => s.kpAll, v => (v / 1e6).toLocaleString('ru-RU', { maximumFractionDigits: 1 }), 1e6);
+    groupedBars('chKp', s => s.kpAll, v => (v / 1e6).toLocaleString(loc(), { maximumFractionDigits: 1 }), 1e6);
     renderParticipation();
     renderPlayers();
+    syncUrl();
   }
+  applyTheme();
   renderAll();
 })();
 </script>
