@@ -11,21 +11,21 @@
 <style>
 :root {
   color-scheme: light;
-  --bg: #f6f5f1; --panel: #ffffff; --ink: #1d1f24; --muted: #6a6f78; --line: #e2e0d9; --grid: #ecebe6; --chip: #f0eee8;
+  --bg: #f6f5f1; --panel: #ffffff; --ink: #1d1f24; --muted: #6a6f78; --line: #e2e0d9; --grid: #ecebe6; --chip: #f0eee8; --hover: rgba(29,31,36,.06);
   --iron: #2a78d6; --rage: #eb6834;
   --st-fight: #1baf7a; --st-unk: #eda100; --st-hit: #e34948; --st-shield: #9b9a95; --st-none: #d8d6cf;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     color-scheme: dark;
-    --bg: #15171b; --panel: #1d2026; --ink: #e8e6e1; --muted: #9aa0a9; --line: #2e323a; --grid: #262a31; --chip: #262a31;
+    --bg: #15171b; --panel: #1d2026; --ink: #e8e6e1; --muted: #9aa0a9; --line: #2e323a; --grid: #262a31; --chip: #262a31; --hover: rgba(232,230,225,.08);
     --iron: #3987e5; --rage: #d95926;
     --st-fight: #199e70; --st-unk: #c98500; --st-hit: #e66767; --st-shield: #6f737b; --st-none: #3a3e46;
   }
 }
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --bg: #15171b; --panel: #1d2026; --ink: #e8e6e1; --muted: #9aa0a9; --line: #2e323a; --grid: #262a31; --chip: #262a31;
+  --bg: #15171b; --panel: #1d2026; --ink: #e8e6e1; --muted: #9aa0a9; --line: #2e323a; --grid: #262a31; --chip: #262a31; --hover: rgba(232,230,225,.08);
   --iron: #3987e5; --rage: #d95926;
   --st-fight: #199e70; --st-unk: #c98500; --st-hit: #e66767; --st-shield: #6f737b; --st-none: #3a3e46;
 }
@@ -70,8 +70,23 @@ svg text.b { font-weight: 600; }
 .mark { transition: opacity .12s; }
 .dimmed .mark { opacity: .25; }
 .dimmed .mark.hl { opacity: 1; }
+.hit.click { cursor: pointer; }
+.has-sel .pm { opacity: .18; }
+.has-sel .pm.sel { opacity: 1; }
+.has-sel text.sel { font-weight: 700; fill: var(--ink); }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
-.chip { padding: 3px 8px; border-radius: 6px; background: var(--chip); border: 1px solid var(--line); font-size: 13px; }
+.chip { padding: 3px 8px; border-radius: 6px; background: var(--chip); border: 1px solid var(--line); font-size: 13px; cursor: pointer; }
+.chip.sel { outline: 2px solid var(--ink); outline-offset: -1px; }
+tbody tr { cursor: pointer; }
+tbody tr:hover td { background: var(--hover); }
+tbody tr.sel td { background: var(--hover); font-weight: 600; }
+tbody tr.sel td:first-child { box-shadow: inset 3px 0 0 var(--ink); }
+input.search { font: inherit; font-size: 14px; padding: 5px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--ink); min-width: 0; width: 220px; }
+.selbar { position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%); z-index: 9; display: none; align-items: center; gap: 10px; padding: 8px 8px 8px 14px; background: var(--ink); color: var(--bg); border-radius: 999px; box-shadow: 0 6px 20px rgba(0,0,0,.25); font-size: 14px; max-width: calc(100% - 32px); }
+.selbar.on { display: flex; }
+.selbar .nm { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.selbar .meta { opacity: .75; white-space: nowrap; }
+.selbar button { border: 0; background: rgba(127,127,127,.35); color: inherit; border-radius: 999px; width: 26px; height: 26px; cursor: pointer; font: inherit; line-height: 1; flex: none; }
 .chip i { font-style: normal; color: var(--muted); font-size: 12px; margin-left: 4px; }
 .tbl-wrap { overflow: auto; max-height: 560px; }
 table { border-collapse: collapse; width: 100%; font-size: 13px; font-variant-numeric: tabular-nums; }
@@ -123,7 +138,9 @@ td .st { display: inline-flex; align-items: center; gap: 5px; }
     <div class="controls">
       <span class="lbl" id="tAllyLbl"></span><div class="seg" id="allySeg"></div>
       <span class="lbl" id="tSortLbl"></span><div class="seg" id="metricSeg"></div>
+      <input class="search" id="pSearch" list="pList" autocomplete="off"><datalist id="pList"></datalist>
     </div>
+    <p class="lead" id="tSelHint"></p>
     <div class="card" style="margin-bottom:16px">
       <h3 id="tScH"></h3>
       <p class="lead" style="margin-bottom:4px" id="tScLead"></p>
@@ -143,6 +160,7 @@ td .st { display: inline-flex; align-items: center; gap: 5px; }
   </section>
 </main>
 <div class="tip" id="tip"></div>
+<div class="selbar" id="selbar"><span class="sw" id="selSw"></span><span class="nm" id="selName"></span><span class="meta" id="selMeta"></span><button id="selClear" type="button">×</button></div>
 
 <!-- Данные КвК: CSV-выгрузка как есть. Для обновления замените содержимое блока. -->
 <script type="text/csv" id="kvk-data">
@@ -575,6 +593,8 @@ td .st { display: inline-flex; align-items: center; gap: 5px; }
       scH: 'Потери БМ и прирост КП',
       scLead: 'Каждая точка — игрок в одном КвК. Чем выше и левее, тем эффективнее: много КП при малых потерях. Пунктир — средняя эффективность обоих альянсов.',
       tblH: 'Таблица',
+      search: 'Найти игрока…', selHint: 'Кликните по точке, столбику, строке таблицы или нику в списке выше, чтобы подсветить игрока на всех графиках. Повторный клик снимает выбор.',
+      clear: 'Снять выбор', selected: 'Выбран',
       st: { fight: 'Воевал', unk: 'Потери, КП не сняты', hit: 'Потери без КП', shield: 'Под щитом', none: 'Нет данных' },
       players: 'игроков в выгрузке', fought: 'воевали', foughtAny: 'воевали хотя бы раз', withUnk: 'с «КП не сняты»',
       effTile: 'КП на 1 млн потерь БМ', better: 'лучше', sample: n => `по ${n} записям с полными данными`,
@@ -607,6 +627,8 @@ td .st { display: inline-flex; align-items: center; gap: 5px; }
       scH: 'Power lost vs KP gained',
       scLead: 'Each dot is a player in one KvK. Higher and further left means more efficient: lots of KP for little loss. The dashed line is the average efficiency of both alliances.',
       tblH: 'Table',
+      search: 'Find a player…', selHint: 'Click a dot, a bar, a table row or a name in the lists above to highlight that player on every chart. Click again to clear.',
+      clear: 'Clear selection', selected: 'Selected',
       st: { fight: 'Fought', unk: 'Losses, KP unknown', hit: 'Losses without KP', shield: 'Shielded', none: 'No data' },
       players: 'players in export', fought: 'fought', foughtAny: 'fought at least once', withUnk: 'incl. “KP unknown”',
       effTile: 'KP per 1M power lost', better: 'better', sample: n => `from ${n} complete records`,
@@ -660,7 +682,8 @@ td .st { display: inline-flex; align-items: center; gap: 5px; }
 
   // ---------- state ----------
   let theme = 'auto'; try { theme = localStorage.getItem('kvk-theme') || 'auto'; } catch (e) {}
-  const state = { kvk: 'all', ally: 'all', metric: 'kp', sortCol: 'kp', sortDir: -1 };
+  const state = { kvk: 'all', ally: 'all', metric: 'kp', sortCol: 'kp', sortDir: -1, sel: null };
+  if (params.get('player') && players.has(params.get('player'))) state.sel = params.get('player');
   const kvkDates = () => state.kvk === 'all' ? DATES : [state.kvk];
 
   // ---------- helpers ----------
@@ -755,6 +778,7 @@ td .st { display: inline-flex; align-items: center; gap: 5px; }
   function syncUrl() {
     const u = new URL(location.href);
     u.searchParams.set('lang', lang);
+    if (state.sel) u.searchParams.set('player', state.sel); else u.searchParams.delete('player');
     try { history.replaceState(null, '', u); } catch (e) {}
   }
   function renderControls() {
@@ -780,6 +804,11 @@ td .st { display: inline-flex; align-items: center; gap: 5px; }
     setText('tIdleH1', x.idleH); setText('tIdleH2', x.idleH); setText('tIdleNote', x.idleNote);
     setText('tPlH', x.plH); setText('tAllyLbl', x.allyLbl); setText('tSortLbl', x.sortLbl);
     setText('tScH', x.scH); setText('tScLead', x.scLead); setText('tTblH', x.tblH);
+    setText('tSelHint', x.selHint);
+    const ps = document.getElementById('pSearch');
+    ps.placeholder = x.search; ps.setAttribute('aria-label', x.search);
+    document.getElementById('selClear').title = x.clear;
+    document.getElementById('selClear').setAttribute('aria-label', x.clear);
     const allyLegend = ALLY.map(a => ({ n: a, c: AC[a] }));
     ['lgA1', 'lgA2', 'lgSc', 'lgBars'].forEach(id => legend(id, allyLegend));
     legend('lgSt', STATUS.map(s => ({ n: stName(s.k), c: s.c })));
@@ -856,6 +885,7 @@ td .st { display: inline-flex; align-items: center; gap: 5px; }
       el('line', { x1: x, x2: x, y1: m.t, y2: H - m.b, class: p === 0 ? 'ax' : 'gl' }, svg);
       el('text', { x, y: H - 6, 'text-anchor': 'middle' }, svg).textContent = p + '%';
     });
+    let selSeg = null;
     lines.forEach((ln, i) => {
       const yy = m.t + i * rowH + 6, bh = rowH - 12;
       const dim = state.kvk !== 'all' && state.kvk !== ln.d;
@@ -878,8 +908,15 @@ td .st { display: inline-flex; align-items: center; gap: 5px; }
         const names = ln.s.rows.filter(r => r.status === st.k).map(r => r.name);
         bindTip(hit, () => `<b>${ln.a} · ${dLabel(ln.d)} · ${stName(st.k)}</b>` + trow(t().tipPlayers, `${c} ${t().of} ${total} (${pct(c, total)})`) +
           `<div style="margin-top:4px;color:var(--muted);font-size:12px">${names.slice(0, 18).map(esc).join(', ')}${names.length > 18 ? t().andMore(names.length - 18) : ''}</div>`);
+        const sp = state.sel && players.get(state.sel);
+        if (sp && sp.ally === ln.a && sp.by[ln.d] && sp.by[ln.d].status === st.k) selSeg = { x: x0, w, yy, bh };
         x0 += w;
       });
+      if (selSeg) {
+        el('rect', { x: selSeg.x - 1.5, y: selSeg.yy - 3, width: Math.max(4, selSeg.w + 1), height: selSeg.bh + 6, rx: 4, fill: 'none', stroke: 'var(--ink)', 'stroke-width': 2.5, 'pointer-events': 'none' }, g);
+        el('path', { d: `M${selSeg.x + selSeg.w / 2 - 5},${selSeg.yy - 9}h10l-5,6z`, fill: 'var(--ink)', 'pointer-events': 'none' }, g);
+        selSeg = null;
+      }
       el('text', { x: W - m.r + 8, y: yy + bh / 2 + 4, class: 'ink b' }, g).textContent = pct(ln.s.cnt.fight, total);
     });
     el('text', { x: W - m.r + 8, y: 12 }, svg).textContent = t().foughtCol;
@@ -888,8 +925,12 @@ td .st { display: inline-flex; align-items: center; gap: 5px; }
       const idle = [...players.values()].filter(p => p.ally === a && DATES.every(d => !p.by[d] || !['fight', 'unk'].includes(p.by[d].status)));
       setText('idleN' + a, idle.length);
       document.getElementById('idle' + a).innerHTML = idle.length
-        ? idle.map(p => `<span class="chip">${esc(p.name)}<i>${DATES.map(d => p.by[d] ? lcFirst(stName(p.by[d].status)) : '—').join(' / ')}</i></span>`).join('')
+        ? idle.map(p => `<span class="chip${p.id === state.sel ? ' sel' : ''}" data-id="${p.id}" role="button" tabindex="0">${esc(p.name)}<i>${DATES.map(d => p.by[d] ? lcFirst(stName(p.by[d].status)) : '—').join(' / ')}</i></span>`).join('')
         : `<span class="note">${t().idleNone}</span>`;
+      document.querySelectorAll('#idle' + a + ' .chip').forEach(ch => {
+        ch.onclick = () => select(ch.dataset.id);
+        ch.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); select(ch.dataset.id); } };
+      });
     });
   }
 
@@ -941,24 +982,32 @@ td .st { display: inline-flex; align-items: center; gap: 5px; }
       el('line', { x1: sx(0), y1: sy(0), x2: sx(x2), y2: sy(y2), stroke: 'var(--muted)', 'stroke-dasharray': '4 4', 'stroke-width': 1.5 }, svg);
       el('text', { x: sx(x2) - 4, y: sy(y2) + 18, 'text-anchor': 'end' }, svg).textContent = t().avg(fmtN(e * 1e6));
     }
+    if (state.sel) svg.classList.add('has-sel');
     const g = el('g', {}, svg);
-    pts.sort((a, b) => b.kp - a.kp).forEach(r => {
-      el('circle', { cx: sx(r.loss), cy: sy(r.kp), r: 5, fill: AC[r.ally], stroke: 'var(--panel)', 'stroke-width': 2, class: 'mark', 'data-id': r.id }, g);
-      const hit = el('circle', { cx: sx(r.loss), cy: sy(r.kp), r: 10, class: 'hit' }, g);
+    // выбранного рисуем последним, чтобы был поверх остальных
+    pts.sort((a, b) => (a.id === state.sel) - (b.id === state.sel) || b.kp - a.kp).forEach(r => {
+      const isSel = r.id === state.sel;
+      el('circle', { cx: sx(r.loss), cy: sy(r.kp), r: isSel ? 7 : 5, fill: AC[r.ally], stroke: isSel ? 'var(--ink)' : 'var(--panel)', 'stroke-width': isSel ? 2.5 : 2, class: 'mark pm' + (isSel ? ' sel' : ''), 'data-id': r.id }, g);
+      const hit = el('circle', { cx: sx(r.loss), cy: sy(r.kp), r: 10, class: 'hit click' }, g);
+      hit.addEventListener('click', () => select(r.id));
       bindTip(hit, () => `<b>${esc(r.name)} · ${r.ally}</b>` + trow(t().kvk, dLabel(r.date)) + trow(t().tipKp, fmtK(r.kp)) + trow(t().tipLoss, fmtM(r.loss)) + trow(t().metric.eff, fmtN(r.eff)),
         () => { svg.classList.add('dimmed'); g.querySelectorAll(`[data-id="${r.id}"]`).forEach(n => n.classList.add('hl')); },
         () => { svg.classList.remove('dimmed'); g.querySelectorAll('.hl').forEach(n => n.classList.remove('hl')); });
     });
     const placed = [];
-    [...pts].sort((a, b) => b.kp - a.kp).slice(0, 8).forEach(r => {
+    const selPts = pts.filter(r => r.id === state.sel);
+    // при выборе подписываем только выбранного игрока, иначе — топ по КП
+    const toLabel = state.sel ? selPts : [...pts].sort((a, b) => b.kp - a.kp).slice(0, 8);
+    toLabel.forEach(r => {
+      const isSel = r.id === state.sel;
       const x = sx(r.loss), y = sy(r.kp), right = x > W - 160;
       const label = state.kvk === 'all' ? `${r.name} · ${dLabel(r.date)}` : r.name;
-      const lx = x + (right ? -9 : 9), w = label.length * 7;
+      const lx = x + (right ? -11 : 11), w = label.length * 7;
       const bx = { x0: right ? lx - w : lx, x1: right ? lx : lx + w, y0: y - 10, y1: y + 6 };
-      if (placed.some(b => b.x0 < bx.x1 && bx.x0 < b.x1 && b.y0 < bx.y1 && bx.y0 < b.y1)) return;
-      if (placed.length >= 6) return;
+      if (!isSel && placed.some(b => b.x0 < bx.x1 && bx.x0 < b.x1 && b.y0 < bx.y1 && bx.y0 < b.y1)) return;
+      if (!isSel && placed.length >= 6) return;
       placed.push(bx);
-      el('text', { x: lx, y: y + 4, 'text-anchor': right ? 'end' : 'start', class: 'ink' }, svg).textContent = label;
+      el('text', { x: lx, y: y + 4, 'text-anchor': right ? 'end' : 'start', class: 'ink' + (isSel ? ' sel b' : '') }, svg).textContent = label;
     });
   }
 
@@ -977,6 +1026,7 @@ td .st { display: inline-flex; align-items: center; gap: 5px; }
     const div = metric === 'loss' ? 1e6 : 1;
     const max = niceMax(Math.max(...list.map(x => x[metric]), 1) / div);
     const svg = el('svg', { viewBox: `0 0 ${W} ${Math.max(H, 60)}`, role: 'img' }, box);
+    if (state.sel && list.some(x => x.p.id === state.sel)) svg.classList.add('has-sel');
     ticks(max).forEach(tk => {
       const x = m.l + tk / max * iw;
       el('line', { x1: x, x2: x, y1: m.t - 4, y2: H - m.b, class: tk === 0 ? 'ax' : 'gl' }, svg);
@@ -987,10 +1037,13 @@ td .st { display: inline-flex; align-items: center; gap: 5px; }
       const yy = m.t + i * rowH;
       const w = x[metric] / div / max * iw;
       const nm = x.p.name.length > 20 ? x.p.name.slice(0, 19) + '…' : x.p.name;
-      el('text', { x: m.l - 8, y: yy + rowH / 2 + 4, 'text-anchor': 'end', class: 'ink' }, svg).textContent = nm;
-      el('path', { d: roundRight(m.l, yy + 3, w, rowH - 6), fill: AC[x.p.ally], class: 'mark' }, svg);
-      el('text', { x: m.l + w + 6, y: yy + rowH / 2 + 4 }, svg).textContent = fmt(x[metric]);
-      const hit = el('rect', { x: 0, y: yy, width: W, height: rowH, class: 'hit' }, svg);
+      const isSel = x.p.id === state.sel;
+      if (isSel) el('rect', { x: 0, y: yy, width: W, height: rowH, rx: 4, fill: 'var(--hover)' }, svg);
+      el('text', { x: m.l - 8, y: yy + rowH / 2 + 4, 'text-anchor': 'end', class: 'ink' + (isSel ? ' sel b' : '') }, svg).textContent = nm;
+      el('path', { d: roundRight(m.l, yy + 3, w, rowH - 6), fill: AC[x.p.ally], class: 'mark pm' + (isSel ? ' sel' : ''), 'data-row': x.p.id }, svg);
+      el('text', { x: m.l + w + 6, y: yy + rowH / 2 + 4, class: isSel ? 'sel' : '' }, svg).textContent = fmt(x[metric]);
+      const hit = el('rect', { x: 0, y: yy, width: W, height: rowH, class: 'hit click' }, svg);
+      hit.addEventListener('click', () => select(x.p.id));
       bindTip(hit, () => `<b>${esc(x.p.name)} · ${x.p.ally}</b>` + trow(t().tipKp, fmtK(x.kp)) + trow(t().tipLoss, fmtM(x.loss)) + trow(t().metric.eff, fmtN(x.eff)) +
         DATES.map(d => trow(t().status + ' ' + dLabel(d), x.p.by[d] ? stName(x.p.by[d].status) : '—')).join(''));
     });
@@ -1018,7 +1071,8 @@ td .st { display: inline-flex; align-items: center; gap: 5px; }
     });
     const tb = document.getElementById('tbl');
     tb.innerHTML = '<thead><tr>' + cols.map(cc => `<th data-k="${cc.k}" class="${cc.k === col.k ? 'on' : ''}">${cc.n}${cc.k === col.k ? (state.sortDir < 0 ? ' ↓' : ' ↑') : ''}</th>`).join('') + '</tr></thead><tbody>' +
-      list.map(x => '<tr>' + cols.map(cc => `<td>${cc.f(x)}</td>`).join('') + '</tr>').join('') + '</tbody>';
+      list.map(x => `<tr data-id="${x.p.id}"${x.p.id === state.sel ? ' class="sel"' : ''}>` + cols.map(cc => `<td>${cc.f(x)}</td>`).join('') + '</tr>').join('') + '</tbody>';
+    tb.querySelectorAll('tbody tr').forEach(tr => tr.onclick = () => select(tr.dataset.id));
     tb.querySelectorAll('th').forEach(th => th.onclick = () => {
       const k = th.dataset.k;
       if (state.sortCol === k) state.sortDir *= -1; else { state.sortCol = k; state.sortDir = (k === 'name' || k === 'ally' || k.startsWith('s')) ? 1 : -1; }
@@ -1027,6 +1081,55 @@ td .st { display: inline-flex; align-items: center; gap: 5px; }
   }
 
   function renderPlayers() { renderScatter(); renderBars(); renderTable(); }
+
+  // ---------- выбор игрока ----------
+  function renderSelbar() {
+    const bar = document.getElementById('selbar');
+    const p = state.sel && players.get(state.sel);
+    bar.classList.toggle('on', !!p);
+    if (!p) return;
+    document.getElementById('selSw').style.background = AC[p.ally];
+    setText('selName', p.name);
+    const a = playerAgg(p, kvkDates());
+    setText('selMeta', `${p.ally} · ${t().tipKp}: ${fmtK(a.kp)} · ${t().metric.eff}: ${fmtN(a.eff)}`);
+  }
+  function fillSearch() {
+    document.getElementById('pList').innerHTML = [...players.values()]
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .map(p => `<option value="${esc(p.name)} · ${p.ally}"></option>`).join('');
+  }
+  // скроллим только внутри таблицы, страницу не дёргаем
+  function scrollTableToSel() {
+    const tr = state.sel && document.querySelector(`#tbl tr[data-id="${state.sel}"]`);
+    if (!tr) return;
+    const wrap = tr.closest('.tbl-wrap');
+    const head = wrap.querySelector('thead').offsetHeight;
+    const top = tr.offsetTop - head, bottom = tr.offsetTop + tr.offsetHeight;
+    if (top < wrap.scrollTop || bottom > wrap.scrollTop + wrap.clientHeight) wrap.scrollTop = top - wrap.clientHeight / 3;
+  }
+  function select(id, force) {
+    state.sel = (!force && state.sel === id) ? null : id;
+    const p = state.sel && players.get(state.sel);
+    // если игрок скрыт фильтром альянса — показываем всех
+    if (p && state.ally !== 'all' && state.ally !== p.ally) { state.ally = 'all'; renderControls(); }
+    hideTip();
+    renderParticipation();
+    renderPlayers();
+    renderSelbar();
+    scrollTableToSel();
+    syncUrl();
+  }
+  document.getElementById('selClear').onclick = () => select(null, true);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && state.sel) select(null, true); });
+  const pSearch = document.getElementById('pSearch');
+  pSearch.addEventListener('change', () => {
+    const v = pSearch.value.trim().toLowerCase();
+    if (!v) return;
+    const all = [...players.values()];
+    const p = all.find(q => `${q.name} · ${q.ally}`.toLowerCase() === v) || all.find(q => q.name.toLowerCase() === v)
+      || all.find(q => q.name.toLowerCase().includes(v.replace(/ · (iron|rage)$/, '')));
+    if (p) { select(p.id, true); pSearch.value = ''; pSearch.blur(); }
+  });
   function renderAll() {
     renderStatic();
     renderControls();
@@ -1035,8 +1138,10 @@ td .st { display: inline-flex; align-items: center; gap: 5px; }
     groupedBars('chKp', s => s.kpAll, v => (v / 1e6).toLocaleString(loc(), { maximumFractionDigits: 1 }), 1e6);
     renderParticipation();
     renderPlayers();
+    renderSelbar();
     syncUrl();
   }
+  fillSearch();
   applyTheme();
   renderAll();
 })();
